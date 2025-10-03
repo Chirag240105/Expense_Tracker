@@ -27,6 +27,20 @@ Backend (optional): Node.js + Express + MongoDB
 Charts: Recharts / Chart.js
 
 
+
+expense-tracker/
+│── public/ # Static files
+│── src/
+│ ├── assets/ # Images, icons
+│ ├── components/ # Reusable UI components
+│ ├── pages/ # Pages (Dashboard, Transactions, etc.)
+│ ├── context/ # Context API for global state
+│ ├── utils/ # Helper functions (formatting, validation)
+│ ├── App.js # Root component
+│ ├── index.js # Entry point
+│── package.json
+│── tailwind.config.js
+│── README.md
 ---
 
 ## 📦 Installation
