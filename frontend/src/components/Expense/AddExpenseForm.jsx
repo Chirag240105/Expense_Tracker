@@ -1,0 +1,55 @@
+import React from 'react'
+import { useState } from 'react';
+import EmojiPickerPopup from '../EmojiPickerPopup';
+import Input from '../Inputs/input';
+
+const AddExpenseForm = ({ onAddExpense }) => {
+  const [expense, setExpense] = useState({
+    category: "",
+    amount: "",
+    date: "",
+    icon: ""
+  });
+
+  const handleChange = (key, value) => setExpense({...expense, [key]: value});
+
+  return (
+    <div className="form-container ">
+      <EmojiPickerPopup
+        icon={expense.icon}
+        onSelect={(selectedIcon) => handleChange("icon", selectedIcon)}
+      />
+      <Input 
+        value={expense.source}
+        onChange={({target}) => handleChange("source", target.value)}
+        label="Expense Source :"
+        placeholder="Grocery , Shoping etc..."
+        type="text"
+      />
+      <Input
+        value={expense.amount}
+        onChange={({target}) => handleChange("amount", target.value)}
+        label="Amount :"
+        placeholder="Enter Amount"
+        type="number"
+      />
+      <Input
+        value={expense.date}
+        onChange={({target}) => handleChange("date", target.value)}
+        label="Date :"
+        type="date"
+      />
+      <div className="flex justify-end mt-4">
+        <button 
+          type="button"
+          className="add-btn-fill"
+          onClick={() => onAddExpense(expense)}
+        >
+          Add Expense
+        </button>
+      </div>
+    </div>
+  )
+}
+
+export default AddExpenseForm
