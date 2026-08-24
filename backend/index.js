@@ -8,6 +8,7 @@ import { fileURLToPath } from "url";
 import incomeRoute from "./src/Routes/incomeRoutes.js"
 import expenseRoute from "./src/Routes/ExpenseRoutes.js"
 import dashboardRoute from "./src/Routes/dashboardRoute.js"
+import aiRoutes from "./src/Routes/aiRoutes.js"
 
 dotenv.config();
 const app = express();
@@ -29,6 +30,7 @@ app.use("/api/expense",expenseRoute);
 app.use("/api/dashboard", dashboardRoute);
 // app.use("api/forgot-password", ForgetPass);
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+//app.use("/api/ai", aiRoutes)
 
 connectDB();
 
