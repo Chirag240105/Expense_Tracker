@@ -2,23 +2,24 @@ import React, { useContext, useState } from 'react';
 import { UserContext } from '../../context/Context.js';
 import Navbar from './Navbar.jsx';
 import SideMenu from './SideMenu.jsx';
+import FloatingAIButton from './FloatingAIButton.jsx'; // ADD THIS IMPORT
 
 function DashboardLayout({ children, activeMenu }) {
   const { user } = useContext(UserContext);
   const [sideMenuOpen, setSideMenuOpen] = useState(false);
 
   return (
-    <div className="bg-gray-100  min-h-screen">
+    <div className="bg-gray-100 min-h-screen">
       <Navbar activeMenu={activeMenu} toggleSideMenu={() => setSideMenuOpen(!sideMenuOpen)} />
 
       {user && (
         <div className="flex">
-        
-          <div className="hidden  md:block">
+          {/* Desktop Sidebar */}
+          <div className="hidden md:block">
             <SideMenu activeMenu={activeMenu} />
           </div>
 
-        
+          {/* Mobile Sidebar */}
           {sideMenuOpen && (
             <div className="fixed inset-0 z-50 bg-black bg-opacity-50 md:hidden">
               <div className="absolute left-0 top-0 w-64 h-full bg-gray-800">
@@ -31,12 +32,14 @@ function DashboardLayout({ children, activeMenu }) {
             </div>
           )}
 
-          
+          {/* Main Content */}
           <main className="flex-grow p-6">
             {children}
           </main>
         </div>
       )}
+
+      {user && <FloatingAIButton />}
     </div>
   );
 }

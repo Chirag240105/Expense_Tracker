@@ -1,8 +1,10 @@
 import React from 'react'
 import { BarChart, ResponsiveContainer, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Cell } from 'recharts'
+import { useCurrency } from '../../context/CurrencyContext';
 
 
 const CustomBarChart = ({data}) => {
+    const {formatCurrency} = useCurrency();
 
     const getBarColor = (index) =>{
         return index % 2 === 0 ? "#875CF5" : "#CFBEFB";
@@ -13,7 +15,7 @@ const CustomBarChart = ({data}) => {
             return (
                 <div className='bg-white shadow-md rounded-lg p-2 border border-gray-300'>
                     <p className='text-xs font-semibold text-fuchsia-800 mb-1'>{payload[0].payload.category}</p>
-                    <p className='text-sm text-gray-600'> Amount: <span className='text-sm font-medium text-gray-900 '>₹{payload[0].payload.amount}</span></p>
+                    <p className='text-sm text-gray-600'> Amount: <span className='text-sm font-medium text-gray-900 '>{formatCurrency(payload[0].payload.amount)}</span></p>
                 </div>
             )
         }

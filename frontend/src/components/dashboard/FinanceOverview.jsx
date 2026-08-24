@@ -1,7 +1,10 @@
 import React from 'react';
 import CustomPieChart from '../charts/CustomPieChart';
 
+import { useCurrency } from '../../context/CurrencyContext';
+
 const FinanceOverview = ({ totalBalance, totalIncome, totalExpense }) => {
+  const {formatCurrency} = useCurrency();
   const balanceData = [
     { name: "Total Balance", amount: totalBalance || 0 },
     { name: "Total Income", amount: totalIncome || 0 },
@@ -17,7 +20,7 @@ const FinanceOverview = ({ totalBalance, totalIncome, totalExpense }) => {
       <CustomPieChart
         data={balanceData}
         label="Total Balance"
-        totalAmount={`${totalBalance}`|| 0}
+        totalAmount={formatCurrency(totalBalance)|| 0}
         showTextAnchor
       />
     </div>

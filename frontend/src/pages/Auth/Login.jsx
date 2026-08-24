@@ -9,7 +9,7 @@ import axiosInstances from '../../utils/axiosInstances.js';
 import { API_PATH } from '../../utils/apiPath.js';
 import { useContext } from 'react';
 import { UserContext } from '../../context/Context.js';
-import Forgot from '../ForgetPass.jsx/Forgot.jsx';
+
 
 
 const Login = () => {

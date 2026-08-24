@@ -11,8 +11,10 @@ import {toast} from 'react-hot-toast'
 import IncomeList from '../../components/Income/IncomeList';
 import DeleteAlert from '../../components/layouts/DeleteAlert';
 import useUserAuth from '../../hooks/useUserAuth';
+import { useCurrency } from '../../context/CurrencyContext';
 const Income = () => {
    useUserAuth();
+   const {formatCurrency} = useCurrency;
   const [openAddIncomeModal, setOpenAddIncomeModal] = useState(false);
   const [incomeData, setIncomeData] = useState([]);
   const [loading, setLoading] = useState(false);

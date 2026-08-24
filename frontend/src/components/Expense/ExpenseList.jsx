@@ -2,8 +2,10 @@ import moment from 'moment'
 import React from 'react'
 import { LuDownload } from 'react-icons/lu'
 import TransactionInfoCard from '../Cards/TransactionInfoCard.JSX'
+import { useCurrency } from '../../context/CurrencyContext'
 
 const ExpenseList=({transactions, onDelete, onDownload}) => {
+    const {formatCurrency} = useCurrency();
   return (
     <div className='card'>
         <div className='flex items-center justify-between'>
@@ -19,7 +21,7 @@ const ExpenseList=({transactions, onDelete, onDownload}) => {
                 title={expense.source}
                 icon={expense.icon}
                 date={moment(expense.date).format("Do MMM YYYY")}
-                amount={expense.amount}
+                amount={formatCurrency(expense.amount)}
                 type="expense"
                 onDelete={() => onDelete(expense._id)}
                 />

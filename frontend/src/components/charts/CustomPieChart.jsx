@@ -23,7 +23,7 @@ const CustomPieChart = ({ data, label, totalAmount, colors = ["#875CF5", "#FA2C3
                   {label}
                 </text>
                 <text x={cx} y={cy + 8} textAnchor="middle" fill="#333" fontSize={24} fontWeight={600}>
-                  ₹{totalAmount}
+                  {totalAmount}
                 </text>
               </>
             ) : null

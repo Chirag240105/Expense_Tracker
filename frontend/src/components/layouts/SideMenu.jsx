@@ -1,56 +1,91 @@
-import React, { useContext } from 'react';
-import { UserContext } from '../../context/Context';
-import { useNavigate } from "react-router-dom";
-import { SIDE_MENU_DATA } from '../../utils/data';
-import avata from "../../assets/avata.png"
-const SideMenu = ({ activeMenu }) => {
-  const { user, clearUser } = useContext(UserContext);
-  const navigate = useNavigate();
+import React from 'react';
+import { NavLink } from 'react-router-dom';
+import { 
+  HiHome, 
+  HiCreditCard, 
+  HiCash, 
+  HiChartBar,
+  HiUserCircle,
+  HiCog 
+} from "react-icons/hi";
+import { FaBrain } from "react-icons/fa6";
 
-  const handleClick = (route) => {
-    if (route === "logout") {
-      handleLogout();
-      return;
-    }
-    navigate(route);
-  };
-
-  const handleLogout = () => {
-    localStorage.clear();
-    clearUser();
-    navigate("/login");
-  };
+function SideMenu({ activeMenu }) {
+  const menuItems = [
+    {
+      name: 'Dashboard',
+      path: '/dashboard',
+      icon: <HiHome className="text-xl" />
+    },
+    {
+      name: 'Expense',
+      path: '/expense',
+      icon: <HiCreditCard className="text-xl" />
+    },
+    {
+      name: 'Income',
+      path: '/income',
+      icon: <HiCash className="text-xl" />
+    },
+    {
+      name: 'AI Insights',
+      path: '/ai-insights',
+      icon: <FaBrain className="text-xl" />
+    },
+    {
+      name: 'Profile',
+      path: '/profile',
+      icon: <HiUserCircle className="text-xl" />
+    },
+  ];
 
   return (
-    <div className="w-64 h-[calc(100vh-61px)] bg-white border-r border-gray-200/50 p-5 sticky top-[61px] z-20">
-      <div className="flex flex-col items-center justify-center gap-3 mt-3 mb-7">
-        <img
-          className="w-20 h-20 rounded-full bg-slate-400"
-          src={avata}
-          alt="User Avatar"
-        />
-        <h5 className="text-gray-950 font-medium leading-6">{user?.username || "User"}</h5>
-      </div>
+    <aside className="w-64 h-screen bg-gray-800 text-white sticky top-0 overflow-y-auto">
+      <div className="p-6">
+        {/* Logo Section */}
+        <div className="flex items-center gap-3 mb-8 pb-6 border-b border-gray-700">
+          <div className="w-10 h-10 bg-gradient-to-br from-green-400 to-green-600 rounded-lg flex items-center justify-center">
+            <span className="text-white font-bold">ET</span>
+          </div>
+          <div>
+            <h2 className="text-lg font-bold">ExpenseVerse</h2>
+            <p className="text-xs text-gray-400">Track your finances</p>
+          </div>
+        </div>
 
-    
-        {SIDE_MENU_DATA.map((item, index) => (
-          <button
-            key={`menu_${index}`}
-            onClick={() => handleClick(item.path)}
-            className={`w-full flex items-center gap-4 text-[15px] ${
-              activeMenu === item.label
-                ? 'text-white bg-blue-800'
-                : ''} py-3 px-6 rounded-lg mb-3`}
+        {/* Navigation Menu */}
+        <nav className="space-y-2">
+          {menuItems.map((item) => (
+            <NavLink
+              key={item.name}
+              to={item.path}
+              className={({ isActive }) =>
+                `flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
+                  isActive || activeMenu === item.name
+                    ? 'bg-green-600 text-white shadow-lg'
+                    : 'text-gray-300 hover:bg-gray-700 hover:text-white'
+                }`
+              }
+            >
+              {item.icon}
+              <span className="font-medium">{item.name}</span>
+            </NavLink>
+          ))}
+        </nav>
+
+        {/* Bottom Section */}
+        <div className="mt-8 pt-6 border-t border-gray-700">
+          <NavLink
+            to="/settings"
+            className="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-gray-700 hover:text-white transition-all duration-200"
           >
-            <item.icon className=''/>
-            {item.label}
-          </button>
-        ))}
-
-        
-      
-    </div>
+            <HiCog className="text-xl" />
+            <span className="font-medium">Settings</span>
+          </NavLink>
+        </div>
+      </div>
+    </aside>
   );
-};
+}
 
 export default SideMenu;
