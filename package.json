@@ -1,0 +1,23 @@
+{
+  "name": "expense-tracker-root",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Full-stack personal finance application with advanced MongoDB features",
+  "type": "module",
+  "scripts": {
+    "start": "docker compose up",
+    "seed": "node scripts/seed.js",
+    "seed:reset": "node scripts/seed.js --reset",
+    "seed:bulk": "node scripts/seed.js --bulk 50000",
+    "migrate": "node scripts/migrate.js",
+    "migrate:dry": "node scripts/migrate.js --dry-run",
+    "inspect:indexes": "node scripts/inspect-indexes.js",
+    "screenshots": "node scripts/screenshots.js",
+    "lint": "npm --prefix frontend run lint",
+    "build": "npm --prefix frontend run build",
+    "test": "npm --prefix backend test"
+  },
+  "devDependencies": {
+    "playwright": "^1.50.0"
+  }
+}
