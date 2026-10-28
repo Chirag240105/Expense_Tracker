@@ -21,6 +21,32 @@ const transactionOptions = {
   },
 };
 
+const pointSchema = new mongoose.Schema(
+  {
+    type: {
+      type: String,
+      enum: ["Point"],
+      default: "Point",
+      required: true,
+    },
+    coordinates: {
+      type: [Number], // [longitude, latitude]
+      required: true,
+      validate: {
+        validator: (coords) =>
+          Array.isArray(coords) &&
+          coords.length === 2 &&
+          coords[0] >= -180 &&
+          coords[0] <= 180 &&
+          coords[1] >= -90 &&
+          coords[1] <= 90,
+        message: "Coordinates must be [longitude, latitude] within valid geographic ranges",
+      },
+    },
+  },
+  { _id: false }
+);
+
 const transactionSchema = new mongoose.Schema(
   {
     userId: {
@@ -88,18 +114,8 @@ const transactionSchema = new mongoose.Schema(
       default: "other",
     },
     location: {
-      type: {
-        type: String,
-        enum: ["Point"],
-        default: "Point",
-      },
-      coordinates: {
-        type: [Number], // [longitude, latitude]
-        validate: {
-          validator: (coords) => !coords || (coords.length === 2 && coords[0] >= -180 && coords[0] <= 180 && coords[1] >= -90 && coords[1] <= 90),
-          message: "Coordinates must be [longitude, latitude] within valid geographic ranges",
-        },
-      },
+      type: pointSchema,
+      default: undefined,
     },
     receiptFileId: {
       type: mongoose.Schema.Types.ObjectId,
