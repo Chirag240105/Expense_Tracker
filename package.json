@@ -12,10 +12,15 @@
     "migrate": "node scripts/migrate.js",
     "migrate:dry": "node scripts/migrate.js --dry-run",
     "inspect:indexes": "node scripts/inspect-indexes.js",
+    "explain": "node scripts/explain-check.js",
     "screenshots": "node scripts/screenshots.js",
     "lint": "npm --prefix frontend run lint",
     "build": "npm --prefix frontend run build",
     "test": "npm --prefix backend test"
+  },
+  "dependencies": {
+    "dotenv": "^17.2.2",
+    "mongoose": "^8.18.1"
   },
   "devDependencies": {
     "playwright": "^1.50.0"
