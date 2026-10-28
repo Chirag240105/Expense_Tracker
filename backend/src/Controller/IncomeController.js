@@ -1,64 +1,72 @@
 import { Income } from "../models/Income.models.js";
 import xlsx from "xlsx";
+import { asyncHandler, HttpError } from "../utils/asyncHandler.js";
 
-export const addIncome =async (req, res)=>{
- const userId = req.user.id;
- try{
-    const {icon, source, amount, date} = req.body;
+export const addIncome = asyncHandler(async (req, res) => {
+  const userId = req.user._id;
+  const { icon, source, amount, date, categoryId, tags, paymentMethod, notes } = req.body;
 
-    if(!source || !amount || !date){
-        return res.status(400).json({ message : "All fields are required"});
-    }
+  if (!source || amount === undefined || amount === null || !date) {
+    throw new HttpError(400, "Source, amount, and date are required");
+  }
 
-    const newIncome = new Income({
-        userId,
-        icon,
-        source,
-        amount,
-        date: new Date(date)
-    });
+  const newIncome = await Income.create({
+    userId,
+    icon: icon || "briefcase",
+    source,
+    amount,
+    date: new Date(date),
+    categoryId: categoryId || null,
+    tags: Array.isArray(tags) ? tags : [],
+    paymentMethod: paymentMethod || "other",
+    notes: notes || "",
+  });
 
-    await newIncome.save();
-    res.status(200).json(newIncome);
- }catch(error){
-    res.status(500).json({ message: "Server error"});
- }
+  return res.status(201).json(newIncome);
+});
 
-}
-export const getAllIncome =async (req, res)=>{
-    const userId = req.user.id;
+export const getAllIncome = asyncHandler(async (req, res) => {
+  const userId = req.user._id;
+  const income = await Income.find({ userId, isDeleted: false })
+    .populate("categoryId", "name color icon")
+    .sort({ date: -1 });
 
-    try{
-        const income = await Income.find({ userId }).sort({ date: -1});
-        res.json(income);
-    }catch(error){
-        res.status(500).json({ message : "Server Error"});
-    }
-};
-export const downloadIncomeExcel =async (req, res)=>{
-    const userId = req.user.id;
-    try{
-        const income = await Income.find({userId}).sort({date: -1});
+  return res.status(200).json(income);
+});
 
-        const data = income.map((item) => ({
-            Source: item.source,
-            Amount: item.amount,
-            Date: item.date,
-        }));
-        const wb = xlsx.utils.book_new();
-        const ws = xlsx.utils.json_to_sheet(data);
-        xlsx.utils.book_append_sheet(wb, ws, "Income");
-        xlsx.writeFile(wb, 'income_detail.xlsx');
-        res.download('income_detail.xlsx');
-    }catch(error){
-        res.status(500).json({ message: 'Server error'});
-    }
-}
-export const deleteIncome =async (req, res)=>{
-    try{
-        await Income.findByIdAndDelete(req.params.id);
-        res.json({ message : "Income deleted successfully"});
-    }catch(error){
-        res.status(500).json({ message : "Server error"});
-    }
-}
+export const downloadIncomeExcel = asyncHandler(async (req, res) => {
+  const userId = req.user._id;
+  const income = await Income.find({ userId, isDeleted: false }).sort({ date: -1 });
+
+  const data = income.map((item) => ({
+    Source: item.source,
+    Amount: item.amount,
+    Date: new Date(item.date).toISOString().split("T")[0],
+    Tags: (item.tags || []).join(", "),
+    PaymentMethod: item.paymentMethod || "other",
+  }));
+
+  const wb = xlsx.utils.book_new();
+  const ws = xlsx.utils.json_to_sheet(data);
+  xlsx.utils.book_append_sheet(wb, ws, "Income");
+
+  const buffer = xlsx.write(wb, { type: "buffer", bookType: "xlsx" });
+
+  res.setHeader("Content-Disposition", 'attachment; filename="income_details.xlsx"');
+  res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+  return res.send(buffer);
+});
+
+export const deleteIncome = asyncHandler(async (req, res) => {
+  const result = await Income.findOneAndUpdate(
+    { _id: req.params.id, userId: req.user._id, isDeleted: false },
+    { isDeleted: true, deletedAt: new Date() },
+    { new: true }
+  );
+
+  if (!result) {
+    throw new HttpError(404, "Income record not found or unauthorized");
+  }
+
+  return res.status(200).json({ success: true, message: "Income deleted successfully" });
+});
