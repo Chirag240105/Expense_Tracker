@@ -17,8 +17,8 @@ This file tracks the status across all phases of the Expense Tracker upgrade.
 | **Phase 2** | Schema & Migration Design | DONE | Tests PASS (6/6), Build PASS | `feat(phase-2): unified transactions, categories, budgets, goals & migration` |
 | **Phase 3** | Indexes & Explain Performance Evidence | DONE | Tests PASS (10/10), Explain PASS | `feat(phase-3): query-tailored indexes, sync tooling, and explain benchmarks` |
 | **Phase 4** | Database Reporting & Aggregations | DONE | Tests PASS (15/15), Build PASS | `feat(phase-4): single-roundtrip $facet dashboard, $setWindowFields trends, budget tracking` |
-| **Phase 5** | Advanced Mongo (Transactions, Streams, GridFS, Bulk) | IN PROGRESS | Pending | Upcoming |
-| **Phase 6** | Operations, Replica Set, Demo Seeder & Tests | NEXT | Pending | Upcoming |
+| **Phase 5** | Advanced Mongo (Transactions, Streams, GridFS, Bulk) | DONE | Tests PASS (18/18), Build PASS | `feat(phase-5): ACID transactions, change-stream SSE, GridFS receipts, bulkWrite` |
+| **Phase 6** | Operations, Replica Set, Demo Seeder & Tests | IN PROGRESS | Pending | Upcoming |
 | **Phase 7** | Frontend Enhancements, Screenshots & Docs Rewrite | NEXT | Pending | Upcoming |
 
 ---
