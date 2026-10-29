@@ -1,8 +1,18 @@
 # Project Execution Progress
 
 ## Overview
-- Overall Status: **COMPLETE**
-- All Phases: 1 → 7 done
+- Overall Status: **IN PROGRESS**
+- Requested execution steps: 1 and 2 verified; 3–5 remain.
+
+## Requested Work Plan
+
+| Step | Scope | Status | Verification |
+|---|---|---|---|
+| 1 | Diagnose and fix auth/dashboard runtime failures; add health, recovery states, and smoke test | **DONE** | Mongo replica set connected; all 14 smoke HTTP checks returned 2xx; dashboard browser render succeeded without post-fix console errors |
+| 2 | Reset demo data, validators, indexes, summaries, and startup seed option | **IN PROGRESS** | Seed reset succeeded; changes are being verified and committed |
+| 3 | Align frontend, backend, AI service, docs, and end-to-end flows | **IN PROGRESS** | API surface and browser flow are being checked |
+| 4 | Improve design system, responsive app shell, and landing/dashboard UX | **PENDING** | — |
+| 5 | Cleanup, deployment assets/docs, CI, screenshots, final security/build checks | **PENDING** | — |
 
 ---
 

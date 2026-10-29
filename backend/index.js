@@ -1,5 +1,5 @@
+import "dotenv/config";
 import express from "express";
-import dotenv from "dotenv";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import path, { dirname } from "path";
@@ -25,8 +25,6 @@ import eventRoutes from "./src/Routes/eventRoutes.js";
 import notificationRoutes from "./src/Routes/notificationRoutes.js";
 import recurringRuleRoutes from "./src/Routes/recurringRuleRoutes.js";
 import aiRoutes from "./src/Routes/aiRoutes.js";
-
-dotenv.config();
 
 const app = express();
 const __filename = fileURLToPath(import.meta.url);
@@ -64,8 +62,8 @@ app.get("/api/health", async (_req, res) => {
       const masterInfo = await mongoose.connection.db.admin().command({ isMaster: 1 });
       isReplicaSet = Boolean(masterInfo.setName);
     }
-  } catch (e) {
-    // Ping failed
+  } catch (error) {
+    console.error("[Health] Database probe failed:", error.message);
   }
 
   res.status(pingOk ? 200 : 503).json({
@@ -118,7 +116,8 @@ const port = process.env.PORT || 9000;
 
 export async function startServer() {
   await connectDB();
-  initChangeStreams();
+  await initChangeStreams();
+
   return app.listen(port, () => {
     console.log(`[Server] Expense Tracker API running on port ${port}`);
   });

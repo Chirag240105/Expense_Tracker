@@ -4,7 +4,10 @@ import { User } from "../models/User.models.js";
 import { RefreshToken } from "../models/RefreshToken.models.js";
 import { asyncHandler, HttpError } from "../utils/asyncHandler.js";
 
-const JWT_SECRET = process.env.JWT_SECRET || "fallback_super_secret_jwt_key_2026";
+const JWT_SECRET = process.env.JWT_SECRET;
+if (!JWT_SECRET) {
+  throw new Error("JWT_SECRET is required before the authentication routes are loaded");
+}
 const ACCESS_EXPIRY = "1h";
 const REFRESH_DAYS = 7;
 const IS_PROD = process.env.NODE_ENV === "production";
@@ -26,8 +29,8 @@ const createRefreshToken = async (userId) => {
 const setRefreshCookie = (res, token) => {
   res.cookie("refreshToken", token, {
     httpOnly: true,
-    secure: IS_PROD,           // HTTPS only in production
-    sameSite: "lax",           // allows cross-site redirects, blocks CSRF
+    secure: IS_PROD,
+    sameSite: IS_PROD ? (process.env.COOKIE_SAME_SITE || "none") : "lax",
     path: "/api/auth",         // only sent to auth endpoints
     maxAge: REFRESH_DAYS * 24 * 60 * 60 * 1000,
   });

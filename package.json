@@ -8,6 +8,7 @@
     "start": "docker compose up",
     "seed": "node scripts/seed.js",
     "seed:reset": "node scripts/seed.js --reset",
+    "smoke": "node scripts/smoke.js",
     "seed:bulk": "node scripts/seed.js --bulk 50000",
     "migrate": "node scripts/migrate.js",
     "migrate:dry": "node scripts/migrate.js --dry-run",

@@ -1,7 +1,9 @@
 // Base URL reads from Vite env var so it can be changed per environment.
 // Fallback to localhost for local development.
-export const BASE_URL = import.meta.env.VITE_API_BASE_URL
-  ? import.meta.env.VITE_API_BASE_URL.replace(/\/api$/, "")
+const configuredApiUrl = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL;
+
+export const BASE_URL = configuredApiUrl
+  ? configuredApiUrl.replace(/\/api\/?$/, "").replace(/\/$/, "")
   : "http://localhost:9000";
 
 export const API_PATH = {

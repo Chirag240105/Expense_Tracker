@@ -28,10 +28,12 @@ const Home = () => {
   const [budgets, setBudgets] = useState([]);
   const [goals, setGoals] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [loadError, setLoadError] = useState("");
 
   const fetchAll = async () => {
     if (loading) return;
     setLoading(true);
+    setLoadError("");
     try {
       const [dashRes, budgetRes, goalRes] = await Promise.all([
         axiosInstance.get(API_PATH.DASHBOARD.GET_DATA),
@@ -43,6 +45,7 @@ const Home = () => {
       setGoals(goalRes.data?.data || []);
     } catch (err) {
       console.error("[Home] Failed to load dashboard:", err);
+      setLoadError(err.response?.data?.message || "We couldn't load your dashboard. Check your connection and try again.");
     } finally {
       setLoading(false);
     }
@@ -77,6 +80,33 @@ const Home = () => {
   return (
     <DashboardLayout activeMenu="Dashboard">
       <div className="my-5 mx-auto max-w-screen-2xl">
+        {loadError && !dashData && (
+          <section className="my-12 rounded-2xl border border-rose-200 bg-white p-8 text-center shadow-sm" role="alert">
+            <h1 className="text-xl font-semibold text-gray-900">Dashboard unavailable</h1>
+            <p className="mt-2 text-sm text-gray-600">{loadError}</p>
+            <button
+              type="button"
+              onClick={fetchAll}
+              disabled={loading}
+              className="mt-5 rounded-lg bg-emerald-600 px-5 py-2.5 font-medium text-white hover:bg-emerald-700 disabled:opacity-60"
+            >
+              {loading ? "Retrying..." : "Try again"}
+            </button>
+          </section>
+        )}
+        {loading && !dashData && !loadError && (
+          <div className="space-y-6" aria-label="Loading dashboard" aria-live="polite">
+            <div className="h-36 animate-pulse rounded-2xl bg-gray-200" />
+            <div className="grid gap-6 md:grid-cols-3">
+              {[0, 1, 2].map((item) => (
+                <div key={item} className="h-28 animate-pulse rounded-2xl bg-gray-200" />
+              ))}
+            </div>
+            <div className="h-72 animate-pulse rounded-2xl bg-gray-200" />
+          </div>
+        )}
+        {!loadError || dashData ? (
+        <>
         {/* Hero Banner */}
         <div className="relative mb-8 p-6 rounded-2xl bg-gradient-to-r from-green-600 via-emerald-500 to-teal-400 text-white overflow-hidden">
           <div className="absolute inset-0 opacity-10 pointer-events-none">
@@ -292,6 +322,21 @@ const Home = () => {
             </div>
           )}
         </div>
+        {!loading && recentTransactions.length === 0 && (
+          <div className="my-6 rounded-2xl border border-dashed border-gray-300 bg-white p-8 text-center">
+            <h2 className="font-semibold text-gray-900">Your dashboard is ready</h2>
+            <p className="mt-2 text-sm text-gray-600">Add your first transaction to see your finances here.</p>
+            <button
+              type="button"
+              onClick={() => navigate("/transactions")}
+              className="mt-4 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700"
+            >
+              View transactions
+            </button>
+          </div>
+        )}
+        </>
+        ) : null}
       </div>
     </DashboardLayout>
   );

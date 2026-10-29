@@ -85,7 +85,7 @@ axiosInstance.interceptors.response.use(
         localStorage.removeItem("token");
         // Only redirect if not already on a public page
         if (!window.location.pathname.startsWith("/auth") &&
-            !window.location.pathname === "/") {
+            window.location.pathname !== "/") {
           window.location.href = "/auth";
         }
         return Promise.reject(refreshError);

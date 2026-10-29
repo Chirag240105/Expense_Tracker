@@ -38,10 +38,19 @@ export function broadcastToUser(userId, eventName, data) {
   }
 }
 
-export function initChangeStreams() {
+export async function initChangeStreams() {
+  if (mongoose.connection.readyState !== 1 || !mongoose.connection.db) {
+    console.warn("[ChangeStream] MongoDB is not connected; real-time updates are disabled.");
+    return false;
+  }
+
   try {
-    const isMaster = mongoose.connection.db?.admin?.().command({ isMaster: 1 });
-    // Attempt to watch if replica set
+    const hello = await mongoose.connection.db.admin().command({ hello: 1 });
+    if (!hello.setName && hello.msg !== "isdbgrid") {
+      console.warn("[ChangeStream] MongoDB is standalone; use a replica set to enable real-time updates.");
+      return false;
+    }
+
     const txStream = Transaction.watch([], { fullDocument: "updateLookup" });
     txStream.on("change", (change) => {
       const fullDoc = change.fullDocument;
@@ -57,8 +66,7 @@ export function initChangeStreams() {
     });
 
     txStream.on("error", (err) => {
-      // Expected if standalone MongoDB
-      console.log("[ChangeStream] Note: Change streams require replica set. Real-time fallback active.");
+      console.error("[ChangeStream] Transaction stream failed; real-time transaction updates are disabled:", err.message);
     });
 
     const notifStream = Notification.watch([], { fullDocument: "updateLookup" });
@@ -68,9 +76,13 @@ export function initChangeStreams() {
         broadcastToUser(fullDoc.userId, "notification", fullDoc);
       }
     });
-    notifStream.on("error", () => {});
+    notifStream.on("error", (err) => {
+      console.error("[ChangeStream] Notification stream failed; real-time notifications are disabled:", err.message);
+    });
+    console.info("[ChangeStream] Transaction and notification streams are active.");
+    return true;
   } catch (err) {
-    console.log("[ChangeStream] Standalone mode detected; using in-memory SSE broadcast fallback.");
+    console.error("[ChangeStream] Could not initialize streams; continuing without real-time updates:", err.message);
+    return false;
   }
 }
-
