@@ -1,8 +1,7 @@
-import React, { useEffect } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import DashboardLayout from '../../components/layouts/DashboardLayout'
 import useUserAuth from '../../hooks/useUserAuth'
 import axiosInstances from '../../utils/axiosInstances';
-import { useState } from 'react';
 import { API_PATH } from '../../utils/apiPath';
 import {toast} from 'react-hot-toast';
 import ExpenseOverview from '../../components/Expense/ExpenseOverview';
@@ -16,27 +15,28 @@ const Expense = () => {
 
     const [openAddExpenseModal, setOpenAddExpenseModal] = useState(false);
     const [expenseData, setExpenseData] = useState([]);
-    const [loading, setLoading] = useState(false);
+    const [loading, setLoading] = useState(true);
+    const [loadError, setLoadError] = useState("");
     const [openDeleteAlert, setOpenDeleteAlert] = useState({
       show: false,
       data: null,
     });
 
-     const fetchExpenseDetails = async() => {
-    if(loading) return ;
-
+     const fetchExpenseDetails = useCallback(async() => {
     setLoading(true);
+    setLoadError("");
     try{
       const response = await axiosInstances.get(`${API_PATH.EXPENSE.GET_ALL_EXPENSE}`);
       if(response.data) {
         setExpenseData(response.data);
       }
     }catch(error){
-      console.log("Something went wrong. Please try agian.", error);
+      console.error("Could not load expense records:", error);
+      setLoadError("Could not load expenses.");
     }finally{
       setLoading(false);
     }
-  };
+  }, []);
 
   
   const handleAddExpense = async(expense) => {
@@ -49,10 +49,12 @@ const Expense = () => {
 
     if(!amount || isNaN(amount) || Number(amount) <=0){
      toast.error("Amount should be valid number greater than 0.");
+     return;
     }
 
     if(!date){
       toast.error("Date is required.");
+      return;
     }
     
     try{
@@ -67,7 +69,8 @@ const Expense = () => {
       toast.success("Expense added successfully");
       fetchExpenseDetails();
     }catch(error){
-      console.error("Error adding expense: ", error.respose?.data?.message || error.message)
+      console.error("Error adding expense: ", error.response?.data?.message || error.message);
+      toast.error(error.response?.data?.message || "Could not add expense. Please try again.");
     }
 
   };
@@ -105,11 +108,21 @@ const Expense = () => {
 
   useEffect(()=>{
     fetchExpenseDetails();
-    return () => {};
-  },[])
+  },[fetchExpenseDetails])
   return (
     <DashboardLayout activeMenu="Expense">
     <div className='my-5 mx-auto'>
+      {loading && expenseData.length === 0 && (
+        <div className="card mb-4" role="status">Loading expenses…</div>
+      )}
+      {loadError && expenseData.length === 0 && (
+        <div className="card mb-4" role="alert">
+          <p>{loadError}</p>
+          <button type="button" className="mt-3 text-green-700 font-semibold" onClick={fetchExpenseDetails}>
+            Retry
+          </button>
+        </div>
+      )}
       <div className='grid grid-cols-1 gap-6'>
         <div className=''>
           <ExpenseOverview

@@ -25,7 +25,7 @@ const ExpenseOverview = ({transactions,onExpenseIncome}) => {
         </div>
         <div className='mt-10'>
             <CustomLineChart
-            data = {chartData}
+            data={chartData}
             
             />
         </div>

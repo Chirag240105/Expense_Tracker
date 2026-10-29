@@ -2,17 +2,26 @@ import React, { useState, useEffect, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import { HiUserCircle, HiMenu, HiLogout } from "react-icons/hi";
 import { LuBell } from "react-icons/lu";
+import { LuMoon, LuSearch, LuSun } from "react-icons/lu";
 import { UserContext } from "../../context/Context.js";
 import axiosInstance from "../../utils/axiosInstances";
 import { API_PATH } from "../../utils/apiPath";
 import CurrencySelector from "../CurrencySelector";
+import useTheme from "../../hooks/useTheme.js";
 
 function Navbar({ activeMenu, toggleSideMenu }) {
   const navigate = useNavigate();
-  const { user } = useContext(UserContext);
+  const { user, clearUser } = useContext(UserContext);
+  const { resolvedTheme, setThemePreference } = useTheme();
   const [userAvatar, setUserAvatar] = useState(null);
   const [showDropdown, setShowDropdown] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [searchTerm, setSearchTerm] = useState("");
+
+  const submitSearch = (event) => {
+    event.preventDefault();
+    navigate(`/transactions?search=${encodeURIComponent(searchTerm.trim())}`);
+  };
 
   useEffect(() => {
     fetchUserInfo();
@@ -26,8 +35,8 @@ function Navbar({ activeMenu, toggleSideMenu }) {
     try {
       const res = await axiosInstance.get(API_PATH.AUTH.GET_USER_INFO);
       if (res.data) setUserAvatar(res.data.profileImageUrl || null);
-    } catch {
-      // silent
+    } catch (error) {
+      console.error("[Navbar] Could not load profile image:", error);
     }
   };
 
@@ -37,14 +46,20 @@ function Navbar({ activeMenu, toggleSideMenu }) {
         params: { unreadOnly: "true" },
       });
       setUnreadCount(res.data?.unreadCount ?? 0);
-    } catch {
-      // silent
+    } catch (error) {
+      console.error("[Navbar] Could not load notification count:", error);
     }
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    navigate("/auth");
+  const handleLogout = async () => {
+    try {
+      await axiosInstance.post(API_PATH.AUTH.LOGOUT);
+    } catch (error) {
+      console.error("[Navbar] Logout request failed:", error.message);
+    } finally {
+      clearUser();
+      navigate("/auth", { replace: true });
+    }
   };
 
   return (
@@ -77,6 +92,27 @@ function Navbar({ activeMenu, toggleSideMenu }) {
               {activeMenu}
             </div>
 
+            <form onSubmit={submitSearch} className="hidden lg:flex items-center rounded-lg border border-gray-200 bg-white px-3">
+              <LuSearch aria-hidden="true" className="text-gray-400" />
+              <input
+                type="search"
+                value={searchTerm}
+                onChange={(event) => setSearchTerm(event.target.value)}
+                placeholder="Search transactions"
+                aria-label="Search transactions"
+                className="w-40 border-0 bg-transparent px-2 py-2 text-sm outline-none"
+              />
+            </form>
+
+            <button
+              type="button"
+              onClick={() => setThemePreference(resolvedTheme === "dark" ? "light" : "dark")}
+              aria-label={`Switch to ${resolvedTheme === "dark" ? "light" : "dark"} theme`}
+              className="rounded-lg p-2 text-gray-600 hover:bg-gray-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-600"
+            >
+              {resolvedTheme === "dark" ? <LuSun size={18} /> : <LuMoon size={18} />}
+            </button>
+
             <CurrencySelector variant="navbar" />
 
             {/* Notifications bell */}
@@ -97,6 +133,9 @@ function Navbar({ activeMenu, toggleSideMenu }) {
             <div className="relative">
               <button
                 onClick={() => setShowDropdown((v) => !v)}
+                aria-expanded={showDropdown}
+                aria-haspopup="menu"
+                aria-label={`${user?.username || "User"} profile menu`}
                 className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-100 transition"
               >
                 <div className="w-9 h-9 rounded-full overflow-hidden border-2 border-green-500 shadow-sm">
@@ -122,7 +161,7 @@ function Navbar({ activeMenu, toggleSideMenu }) {
                     className="fixed inset-0 z-10"
                     onClick={() => setShowDropdown(false)}
                   />
-                  <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-lg border border-gray-200 py-2 z-20">
+                  <div role="menu" className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-lg border border-gray-200 py-2 z-20">
                     <div className="px-4 py-3 border-b border-gray-100">
                       <p className="text-sm font-semibold text-gray-800">
                         {user?.username || "User"}
@@ -130,12 +169,14 @@ function Navbar({ activeMenu, toggleSideMenu }) {
                       <p className="text-xs text-gray-500">{user?.email}</p>
                     </div>
                     <button
+                      role="menuitem"
                       onClick={() => { navigate("/profile"); setShowDropdown(false); }}
                       className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-3"
                     >
                       <HiUserCircle className="text-lg" /> My Profile
                     </button>
                     <button
+                      role="menuitem"
                       onClick={() => { navigate("/notifications"); setShowDropdown(false); }}
                       className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-3"
                     >
@@ -148,6 +189,7 @@ function Navbar({ activeMenu, toggleSideMenu }) {
                     </button>
                     <div className="border-t border-gray-100 mt-2 pt-2">
                       <button
+                        role="menuitem"
                         onClick={handleLogout}
                         className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-3"
                       >

@@ -1,6 +1,6 @@
 import { Income } from "../models/Income.models.js";
-import xlsx from "xlsx";
 import { asyncHandler, HttpError } from "../utils/asyncHandler.js";
+import { createTransactionWorkbook } from "../utils/createTransactionWorkbook.js";
 
 export const addIncome = asyncHandler(async (req, res) => {
   const userId = req.user._id;
@@ -38,19 +38,7 @@ export const downloadIncomeExcel = asyncHandler(async (req, res) => {
   const userId = req.user._id;
   const income = await Income.find({ userId, isDeleted: false }).sort({ date: -1 });
 
-  const data = income.map((item) => ({
-    Source: item.source,
-    Amount: item.amount,
-    Date: new Date(item.date).toISOString().split("T")[0],
-    Tags: (item.tags || []).join(", "),
-    PaymentMethod: item.paymentMethod || "other",
-  }));
-
-  const wb = xlsx.utils.book_new();
-  const ws = xlsx.utils.json_to_sheet(data);
-  xlsx.utils.book_append_sheet(wb, ws, "Income");
-
-  const buffer = xlsx.write(wb, { type: "buffer", bookType: "xlsx" });
+  const buffer = await createTransactionWorkbook("Income", income);
 
   res.setHeader("Content-Disposition", 'attachment; filename="income_details.xlsx"');
   res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");

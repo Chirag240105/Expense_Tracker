@@ -36,6 +36,12 @@ async function main() {
   console.log("[Screenshots] Starting capture...");
 
   try {
+    // ── 0. Landing page ────────────────────────────────────────────────────
+    await page.goto(`${BASE_URL}/`, { waitUntil: "networkidle" });
+    await page.waitForTimeout(1200);
+    await page.screenshot({ path: path.join(OUTPUT_DIR, "00-landing.png"), fullPage: false });
+    console.log("[Screenshots] ✓ 00-landing.png");
+
     // ── 1. Login page ──────────────────────────────────────────────────────
     await page.goto(`${BASE_URL}/auth`, { waitUntil: "networkidle" });
     await page.waitForTimeout(800);

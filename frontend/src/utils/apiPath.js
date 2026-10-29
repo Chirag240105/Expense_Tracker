@@ -13,6 +13,7 @@ export const API_PATH = {
     GET_USER_INFO: "/api/auth/getInfo",
     UPDATE_PROFILE: "/api/auth/update-profile",
     REFRESH: "/api/auth/refresh",
+    LOGOUT: "/api/auth/logout",
   },
   DASHBOARD: {
     GET_DATA: "/api/dashboard",
@@ -20,6 +21,7 @@ export const API_PATH = {
   TRANSACTIONS: {
     LIST: "/api/transactions",
     CREATE: "/api/transactions",
+    DELETE: (id) => `/api/transactions/${id}`,
     BULK: "/api/transactions/bulk",
     NEARBY: "/api/transactions/nearby",
   },

@@ -9,6 +9,7 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
+import { CHART_COLORS } from "../charts/chartColors.js";
 
 /**
  * Converts raw dailyTrends array [{ _id: { date, type }, total }]
@@ -58,8 +59,8 @@ const DailyTrendsChart = ({ data = [] }) => {
             labelFormatter={(l) => `Date: ${l}`}
           />
           <Legend wrapperStyle={{ fontSize: 12 }} />
-          <Bar dataKey="income" name="Income" fill="#10B981" radius={[3, 3, 0, 0]} />
-          <Bar dataKey="expense" name="Expense" fill="#EF4444" radius={[3, 3, 0, 0]} />
+          <Bar dataKey="income" name="Income" fill={CHART_COLORS.income} radius={[3, 3, 0, 0]} />
+          <Bar dataKey="expense" name="Expense" fill={CHART_COLORS.expense} radius={[3, 3, 0, 0]} />
         </BarChart>
       </ResponsiveContainer>
     </div>

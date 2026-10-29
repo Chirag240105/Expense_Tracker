@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useRef } from "react";
 import DashboardLayout from "../../components/layouts/DashboardLayout";
 import useUserAuth from "../../hooks/useUserAuth";
 import axiosInstance from "../../utils/axiosInstances";
@@ -6,6 +6,7 @@ import { API_PATH } from "../../utils/apiPath";
 import TransactionInfoCard from "../../components/Cards/TransactionInfoCard";
 import { useCurrency } from "../../context/CurrencyContext";
 import { toast } from "react-hot-toast";
+import { useLocation } from "react-router-dom";
 import moment from "moment";
 import {
   LuSearch,
@@ -13,6 +14,7 @@ import {
   LuDownload,
   LuPlus,
   LuChevronDown,
+  LuUpload,
 } from "react-icons/lu";
 import Modal from "../../components/Modal";
 import AddTransactionForm from "../../components/Transactions/AddTransactionForm";
@@ -28,9 +30,32 @@ const PAYMENT_METHODS = [
   { value: "other", label: "Other" },
 ];
 
+function parseCsvRow(row) {
+  const cells = [];
+  let cell = "";
+  let quoted = false;
+  for (let index = 0; index < row.length; index += 1) {
+    const character = row[index];
+    if (character === '"' && row[index + 1] === '"' && quoted) {
+      cell += '"';
+      index += 1;
+    } else if (character === '"') {
+      quoted = !quoted;
+    } else if (character === "," && !quoted) {
+      cells.push(cell.trim());
+      cell = "";
+    } else {
+      cell += character;
+    }
+  }
+  cells.push(cell.trim());
+  return cells;
+}
+
 const Transactions = () => {
   useUserAuth();
   const { formatCurrency } = useCurrency();
+  const location = useLocation();
 
   const [transactions, setTransactions] = useState([]);
   const [cursor, setCursor] = useState(null);
@@ -40,7 +65,9 @@ const Transactions = () => {
   const [categories, setCategories] = useState([]);
 
   // Filters
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState(
+    () => new URLSearchParams(location.search).get("search") || ""
+  );
   const [type, setType] = useState("");
   const [categoryId, setCategoryId] = useState("");
   const [startDate, setStartDate] = useState("");
@@ -48,13 +75,15 @@ const Transactions = () => {
   const [showFilters, setShowFilters] = useState(false);
 
   const [showModal, setShowModal] = useState(false);
+  const importInputRef = useRef(null);
 
   const fetchCategories = async () => {
     try {
       const res = await axiosInstance.get(API_PATH.CATEGORIES.LIST);
       setCategories(res.data?.data || []);
-    } catch (e) {
-      // silent
+    } catch (error) {
+      console.error("[Transactions] Failed to load categories:", error);
+      toast.error("Categories could not be loaded");
     }
   };
 
@@ -83,7 +112,8 @@ const Transactions = () => {
         setHasMore(payload.pagination?.hasMore || false);
         setTotalCount(payload.pagination?.totalCount || 0);
       } catch (err) {
-        toast.error("Failed to load transactions");
+        console.error("[Transactions] Failed to load transactions:", err);
+        toast.error(err.response?.data?.message || "Failed to load transactions");
       } finally {
         setLoading(false);
       }
@@ -126,6 +156,47 @@ const Transactions = () => {
     }
   };
 
+  const handleImport = async (event) => {
+    const input = event.currentTarget;
+    const file = input.files?.[0];
+    if (!file) return;
+
+    try {
+      const rows = (await file.text()).split(/\r?\n/).filter((row) => row.trim());
+      if (rows.length < 2) throw new Error("The CSV must include a header and at least one transaction.");
+      const headers = parseCsvRow(rows[0]).map((header) => header.toLowerCase());
+      const transactionsToImport = rows.slice(1).map((row, rowIndex) => {
+        const values = parseCsvRow(row);
+        const record = Object.fromEntries(headers.map((header, index) => [header, values[index] || ""]));
+        const amount = Number(record.amount);
+        if (!record.source || !Number.isFinite(amount) || amount <= 0) {
+          throw new Error(`Row ${rowIndex + 2} needs a source and a positive amount.`);
+        }
+        return {
+          source: record.source,
+          amount,
+          date: record.date || new Date().toISOString(),
+          type: ["income", "expense"].includes(record.type) ? record.type : "expense",
+          categoryId: record.categoryid || null,
+          tags: record.tags ? record.tags.split("|").map((tag) => tag.trim()).filter(Boolean) : [],
+          paymentMethod: record.paymentmethod || "other",
+        };
+      });
+
+      const response = await axiosInstance.post(API_PATH.TRANSACTIONS.BULK, {
+        transactions: transactionsToImport,
+      });
+      toast.success(`${response.data.insertedCount} transactions imported`);
+      setCursor(null);
+      await fetchTransactions(true);
+    } catch (error) {
+      console.error("[Transactions] CSV import failed:", error);
+      toast.error(error.response?.data?.message || error.message || "CSV import failed");
+    } finally {
+      input.value = "";
+    }
+  };
+
   return (
     <DashboardLayout activeMenu="Transactions">
       <div className="my-5 mx-auto max-w-screen-xl">
@@ -138,6 +209,21 @@ const Transactions = () => {
             </p>
           </div>
           <div className="flex gap-2">
+            <input
+              ref={importInputRef}
+              type="file"
+              accept=".csv,text/csv"
+              onChange={handleImport}
+              className="hidden"
+              aria-label="Import transactions CSV"
+            />
+            <button
+              type="button"
+              onClick={() => importInputRef.current?.click()}
+              className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg text-sm hover:bg-gray-50 transition"
+            >
+              <LuUpload size={16} /> Import CSV
+            </button>
             <button
               onClick={() => handleDownload("expense")}
               className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg text-sm hover:bg-gray-50 transition"

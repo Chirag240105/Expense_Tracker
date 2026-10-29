@@ -17,11 +17,13 @@ const AIInsights = () => {
   const [analysis, setAnalysis] = useState(null);
   const [recommendations, setRecommendations] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
   const [activeTab, setActiveTab] = useState('overview');
 
   const fetchAIInsights = async () => {
     try {
       setLoading(true);
+      setLoadError("");
       const [predictionRes, analysisRes, recommendationsRes] = await Promise.all([
         axiosInstances.get(API_PATH.AI.PREDICT_EXPENSE),
         axiosInstances.get(API_PATH.AI.ANALYZE_SPENDING),
@@ -33,6 +35,7 @@ const AIInsights = () => {
       setRecommendations(recommendationsRes.data);
     } catch (error) {
       console.error("Error fetching AI insights:", error);
+      setLoadError(error.response?.data?.message || "AI insights are temporarily unavailable.");
     } finally {
       setLoading(false);
     }
@@ -53,6 +56,20 @@ const AIInsights = () => {
           <p className="mt-6 text-xl font-semibold text-gray-700">AI is analyzing your finances...</p>
           <p className="text-sm text-gray-500">This may take a few moments</p>
         </div>
+      </DashboardLayout>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <DashboardLayout activeMenu="AI Insights">
+        <section className="mx-auto my-12 max-w-xl rounded-2xl border border-amber-200 bg-white p-8 text-center" role="alert">
+          <h1 className="text-xl font-semibold text-gray-900">AI insights unavailable</h1>
+          <p className="mt-2 text-sm text-gray-600">{loadError}</p>
+          <button type="button" onClick={fetchAIInsights} className="mt-5 rounded-lg bg-purple-600 px-4 py-2 font-medium text-white">
+            Try again
+          </button>
+        </section>
       </DashboardLayout>
     );
   }

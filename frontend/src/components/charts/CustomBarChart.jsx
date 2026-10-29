@@ -1,20 +1,23 @@
 import React from 'react'
-import { BarChart, ResponsiveContainer, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Cell } from 'recharts'
+import { BarChart, ResponsiveContainer, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Cell } from 'recharts'
 import { useCurrency } from '../../context/CurrencyContext';
+import { CHART_COLORS } from "./chartColors.js";
 
 
-const CustomBarChart = ({data}) => {
+const CustomBarChart = ({data, type = "neutral"}) => {
     const {formatCurrency} = useCurrency();
 
-    const getBarColor = (index) =>{
-        return index % 2 === 0 ? "#875CF5" : "#CFBEFB";
-    };
+    const barColor = type === "income"
+        ? CHART_COLORS.income
+        : type === "expense"
+          ? CHART_COLORS.expense
+          : CHART_COLORS.primary;
 
     const CustomTooltip = ({ active , payload})=>{
         if(active && payload && payload.length){
             return (
-                <div className='bg-white shadow-md rounded-lg p-2 border border-gray-300'>
-                    <p className='text-xs font-semibold text-fuchsia-800 mb-1'>{payload[0].payload.category}</p>
+                <div className='rounded-lg border border-gray-300 bg-white p-2 shadow-md'>
+                    <p className='mb-1 text-xs font-semibold text-indigo-800'>{payload[0].payload.category}</p>
                     <p className='text-sm text-gray-600'> Amount: <span className='text-sm font-medium text-gray-900 '>{formatCurrency(payload[0].payload.amount)}</span></p>
                 </div>
             )
@@ -27,18 +30,18 @@ const CustomBarChart = ({data}) => {
 
             <BarChart data={data}>
                 <CartesianGrid stroke="none"/>
-                <XAxis dataKey="category" tick={{fontSize: 12, fill: "#555"}} stroke="none"/>
-                <YAxis tick={{fontSize : 12, fill: "#555" }} stroke="none"/>
+                <XAxis dataKey="category" tick={{fontSize: 12, fill: "var(--text-secondary)"}} stroke="none"/>
+                <YAxis tick={{fontSize : 12, fill: "var(--text-secondary)" }} stroke="none"/>
                 <Tooltip content={CustomTooltip}/>
 
                 <Bar 
                 dataKey="amount"
-                fill='#FF8042'
+                fill={barColor}
                 radius={[10, 10, 0, 0]}
                 activeDot={{r: 8, fill: "yellow" }}
                 activeStyle={{fill: "green"}}
-                >{data.map((entry, index)=>(
-                    <Cell key={index} fill={getBarColor(index)}/>
+                >{data.map((entry)=>( 
+                    <Cell key={entry.category} fill={barColor}/>
                 ))}
                 </Bar>
             </BarChart>

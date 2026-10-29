@@ -1,23 +1,13 @@
-import React from 'react'
-import { useEffect } from 'react';
-import { useState } from 'react'
+import React, { useMemo } from 'react'
 import CustomPieChart from '../charts/CustomPieChart';
 import { useCurrency } from '../../context/CurrencyContext';
 
 const RecentIncomeWithChart = ({data, totalIncome}) => {
     const {formatCurrency} = useCurrency();
-    const [ChartData, setChartData] = useState([]);
-    const prepareChartData = () =>{
-        const dataArr = data?.map((item) =>({
+    const chartData = useMemo(() => data?.map((item) => ({
             name: item?.source,
             amount: item?.amount,
-        }));
-        setChartData(dataArr);
-    };
-        useEffect(()=>{
-            prepareChartData();
-            return () => {};
-        },[data]);
+        })) || [], [data]);
         
     return (
     <div className='card'>
@@ -26,7 +16,7 @@ const RecentIncomeWithChart = ({data, totalIncome}) => {
         </div>
 
     <CustomPieChart
-    data={ChartData}
+    data={chartData}
     label="Total Income"
     totalAmount={formatCurrency(totalIncome)}
     showTextAnchor

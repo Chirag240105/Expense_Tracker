@@ -2,6 +2,9 @@ import "dotenv/config";
 import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
+import compression from "compression";
+import helmet from "helmet";
+import rateLimit from "express-rate-limit";
 import path, { dirname } from "path";
 import { fileURLToPath } from "url";
 import mongoose from "mongoose";
@@ -30,7 +33,14 @@ const app = express();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
+if (process.env.NODE_ENV === "production") {
+  app.set("trust proxy", Number(process.env.TRUST_PROXY) || 1);
+}
+
 // Security & Parsing Middleware
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: "cross-origin" },
+}));
 app.use(
   cors({
     origin: process.env.CLIENT_URL || "http://localhost:5173",
@@ -40,9 +50,16 @@ app.use(
   })
 );
 
+app.use(compression());
 app.use(cookieParser());                         // must be before routes so req.cookies is populated
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
+app.use("/api", rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: process.env.NODE_ENV === "production" ? 300 : 1000,
+  standardHeaders: "draft-7",
+  legacyHeaders: false,
+}));
 
 // Static uploads (legacy support)
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
@@ -115,6 +132,10 @@ app.use(errorHandler);
 const port = process.env.PORT || 9000;
 
 export async function startServer() {
+  if (process.env.NODE_ENV === "production") {
+    if (!process.env.MONGO_URI) throw new Error("MONGO_URI is required in production");
+    if (!process.env.CLIENT_URL) throw new Error("CLIENT_URL is required in production");
+  }
   await connectDB();
   await initChangeStreams();
 

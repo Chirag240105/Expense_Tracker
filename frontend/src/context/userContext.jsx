@@ -1,6 +1,5 @@
-import React, { createContext, useContext, useState, useCallback } from "react";
-
-export const UserContext = createContext();
+import React, { useState, useCallback } from "react";
+import { UserContext } from "./UserContext.js";
 
 export const UserProvider = ({ children }) => {
   // accessToken stored in memory (not localStorage) — more secure than plain localStorage
@@ -43,5 +42,3 @@ export const UserProvider = ({ children }) => {
     </UserContext.Provider>
   );
 };
-
-export const useUser = () => useContext(UserContext);

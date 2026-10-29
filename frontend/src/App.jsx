@@ -1,10 +1,13 @@
 import React, { lazy, Suspense, useContext } from "react";
 import { BrowserRouter as Router, Route, Routes, Navigate, useLocation } from "react-router-dom";
-import { UserProvider, UserContext } from "./context/userContext.jsx";
-import { CurrencyProvider } from "./context/CurrencyContext.jsx";
+import { AnimatePresence, motion, MotionConfig, useReducedMotion } from "framer-motion";
+import { UserContext } from "./context/UserContext.js";
+import { UserProvider } from "./context/userContext.jsx";
+import { CurrencyProvider } from "./context/CurrencyProvider.jsx";
 import { Toaster } from "react-hot-toast";
 import useUserAuth from "./hooks/useUserAuth.jsx";
 import ErrorBoundary from "./components/ErrorBoundary.jsx";
+import ThemeProvider from "./context/ThemeProvider.jsx";
 
 // Always-loaded (critical path — tiny files)
 import Auth from "./pages/Auth/Auth.jsx";
@@ -23,6 +26,8 @@ const Categories   = lazy(() => import("./pages/Dashboard/Categories.jsx"));
 const Analytics    = lazy(() => import("./pages/Dashboard/Analytics.jsx"));
 const Notifications  = lazy(() => import("./pages/Dashboard/Notifications.jsx"));
 const RecurringRules = lazy(() => import("./pages/Dashboard/RecurringRules.jsx"));
+const NearbySpending = lazy(() => import("./pages/Dashboard/NearbySpending.jsx"));
+const Settings = lazy(() => import("./pages/Dashboard/Settings.jsx"));
 
 // ── Spinner shown while lazy chunk loads ─────────────────────────────────────
 const PageLoader = () => (
@@ -70,49 +75,65 @@ const RouteErrorBoundary = ({ children }) => {
   return <ErrorBoundary key={location.pathname}>{children}</ErrorBoundary>;
 };
 
+const ApplicationRoutes = () => {
+  const location = useLocation();
+  const prefersReducedMotion = useReducedMotion();
+  const offset = prefersReducedMotion ? 0 : 8;
+
+  return (
+    <AnimatePresence mode="wait" initial={false}>
+      <motion.div
+        key={location.pathname}
+        initial={{ opacity: 0, y: offset }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -offset }}
+        transition={{ duration: prefersReducedMotion ? 0 : 0.18 }}
+        className="min-h-screen"
+      >
+        <RouteErrorBoundary>
+          <Routes location={location}>
+            <Route path="/" element={<Landing />} />
+            <Route path="/auth" element={<PublicOnlyRoute><Auth /></PublicOnlyRoute>} />
+            <Route path="/login" element={<Navigate to="/auth" replace />} />
+            <Route path="/signup" element={<Navigate to="/auth" replace />} />
+            <Route path="/dashboard" element={<PrivateRoute><Home /></PrivateRoute>} />
+            <Route path="/transactions" element={<PrivateRoute><Transactions /></PrivateRoute>} />
+            <Route path="/income" element={<PrivateRoute><Income /></PrivateRoute>} />
+            <Route path="/expense" element={<PrivateRoute><Expense /></PrivateRoute>} />
+            <Route path="/budgets" element={<PrivateRoute><Budgets /></PrivateRoute>} />
+            <Route path="/goals" element={<PrivateRoute><Goals /></PrivateRoute>} />
+            <Route path="/categories" element={<PrivateRoute><Categories /></PrivateRoute>} />
+            <Route path="/analytics" element={<PrivateRoute><Analytics /></PrivateRoute>} />
+            <Route path="/notifications" element={<PrivateRoute><Notifications /></PrivateRoute>} />
+            <Route path="/recurring-rules" element={<PrivateRoute><RecurringRules /></PrivateRoute>} />
+            <Route path="/nearby" element={<PrivateRoute><NearbySpending /></PrivateRoute>} />
+            <Route path="/settings" element={<PrivateRoute><Settings /></PrivateRoute>} />
+            <Route path="/ai-insights" element={<PrivateRoute><AIInsights /></PrivateRoute>} />
+            <Route path="/profile" element={<PrivateRoute><Profile /></PrivateRoute>} />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </RouteErrorBoundary>
+      </motion.div>
+    </AnimatePresence>
+  );
+};
+
 const App = () => (
   <UserProvider>
-    <CurrencyProvider>
-      <Router>
-        <SessionGate>
-          <Suspense fallback={<PageLoader />}>
-            <RouteErrorBoundary>
-              <Routes>
-              {/* Public landing page — always visible */}
-              <Route path="/" element={<Landing />} />
-
-              {/* Auth — redirect to dashboard if already logged in */}
-              <Route path="/auth"   element={<PublicOnlyRoute><Auth /></PublicOnlyRoute>} />
-              <Route path="/login"  element={<Navigate to="/auth" replace />} />
-              <Route path="/signup" element={<Navigate to="/auth" replace />} />
-
-              {/* Protected routes */}
-              <Route path="/dashboard"     element={<PrivateRoute><Home /></PrivateRoute>} />
-              <Route path="/transactions"  element={<PrivateRoute><Transactions /></PrivateRoute>} />
-              <Route path="/income"        element={<PrivateRoute><Income /></PrivateRoute>} />
-              <Route path="/expense"       element={<PrivateRoute><Expense /></PrivateRoute>} />
-              <Route path="/budgets"       element={<PrivateRoute><Budgets /></PrivateRoute>} />
-              <Route path="/goals"         element={<PrivateRoute><Goals /></PrivateRoute>} />
-              <Route path="/categories"    element={<PrivateRoute><Categories /></PrivateRoute>} />
-              <Route path="/analytics"     element={<PrivateRoute><Analytics /></PrivateRoute>} />
-              <Route path="/notifications" element={<PrivateRoute><Notifications /></PrivateRoute>} />
-              <Route path="/recurring-rules" element={<PrivateRoute><RecurringRules /></PrivateRoute>} />
-              <Route path="/ai-insights"   element={<PrivateRoute><AIInsights /></PrivateRoute>} />
-              <Route path="/profile"       element={<PrivateRoute><Profile /></PrivateRoute>} />
-
-              {/* Catch-all → landing page */}
-              <Route path="*" element={<Navigate to="/" replace />} />
-              </Routes>
-            </RouteErrorBoundary>
-          </Suspense>
-        </SessionGate>
-      </Router>
-
-      <Toaster
-        position="top-right"
-        toastOptions={{ style: { fontSize: "13px" }, duration: 3000 }}
-      />
-    </CurrencyProvider>
+    <ThemeProvider>
+      <CurrencyProvider>
+        <MotionConfig reducedMotion="user">
+          <Router>
+            <SessionGate>
+              <Suspense fallback={<PageLoader />}>
+                <ApplicationRoutes />
+              </Suspense>
+            </SessionGate>
+            <Toaster position="top-right" toastOptions={{ style: { fontSize: "13px" }, duration: 3000 }} />
+          </Router>
+        </MotionConfig>
+      </CurrencyProvider>
+    </ThemeProvider>
   </UserProvider>
 );
 

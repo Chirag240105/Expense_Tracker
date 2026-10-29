@@ -1,6 +1,6 @@
 import React from 'react'
 import DashboardLayout from '../../components/layouts/DashboardLayout'
-import { useState } from 'react'
+import { useCallback, useState } from 'react'
 import IncomeOverview from '../../components/Income/IncomeOverview';
 import axiosInstances from '../../utils/axiosInstances';
 import { API_PATH } from '../../utils/apiPath';
@@ -11,33 +11,32 @@ import {toast} from 'react-hot-toast'
 import IncomeList from '../../components/Income/IncomeList';
 import DeleteAlert from '../../components/layouts/DeleteAlert';
 import useUserAuth from '../../hooks/useUserAuth';
-import { useCurrency } from '../../context/CurrencyContext';
 const Income = () => {
    useUserAuth();
-   const {formatCurrency} = useCurrency;
   const [openAddIncomeModal, setOpenAddIncomeModal] = useState(false);
   const [incomeData, setIncomeData] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
   const [openDeleteAlert, setOpenDeleteAlert] = useState({
     show: false,
     data: null,
   });
 
-  const fetchIncomeDetails = async() => {
-    if(loading) return ;
-
+  const fetchIncomeDetails = useCallback(async() => {
     setLoading(true);
+    setLoadError("");
     try{
       const response = await axiosInstances.get(`${API_PATH.INCOME.GET_ALL_INCOME}`);
       if(response.data) {
         setIncomeData(response.data);
       }
     }catch(error){
-      console.log("Something went wrong. Please try agian.", error);
+      console.error("Could not load income records:", error);
+      setLoadError("Could not load income.");
     }finally{
       setLoading(false);
     }
-  };
+  }, []);
   const handleAddIncome = async(income) => {
 
     const {source, amount, date, icon} = income;
@@ -48,10 +47,12 @@ const Income = () => {
 
     if(!amount || isNaN(amount) || Number(amount) <=0){
      toast.error("Amount should be valid number greater than 0.");
+     return;
     }
 
     if(!date){
       toast.error("Date is required.");
+      return;
     }
     
     try{
@@ -66,7 +67,8 @@ const Income = () => {
       toast.success("Income added successfully");
       fetchIncomeDetails();
     }catch(error){
-      console.error("Error adding income: ", error.respose?.data?.message || error.message)
+      console.error("Error adding income: ", error.response?.data?.message || error.message);
+      toast.error(error.response?.data?.message || "Could not add income. Please try again.");
     }
 
   };
@@ -81,6 +83,7 @@ const Income = () => {
         "Erroe deleting income:",
         error.response?.data?.message || error.message
       );
+        toast.error(error.response?.data?.message || "Could not delete income. Please try again.");
     }
   };
   const handleDownloadIncome = async () => {
@@ -104,11 +107,21 @@ const Income = () => {
 
   useEffect(()=>{
     fetchIncomeDetails();
-    return () => {};
-  },[])
+  },[fetchIncomeDetails])
   return (
   <DashboardLayout activeMenu="Income">
     <div className='my-5 mx-auto'>
+      {loading && incomeData.length === 0 && (
+        <div className="card mb-4" role="status">Loading income…</div>
+      )}
+      {loadError && incomeData.length === 0 && (
+        <div className="card mb-4" role="alert">
+          <p>{loadError}</p>
+          <button type="button" className="mt-3 text-green-700 font-semibold" onClick={fetchIncomeDetails}>
+            Retry
+          </button>
+        </div>
+      )}
       <div className='grid grid-cols-1 gap-6'>
         <div className=''>
           <IncomeOverview 

@@ -45,12 +45,15 @@ async function main() {
   if (!login?.token) throw new Error("Login response did not contain an access token");
   const token = login.token;
 
+  const profile = await request("/api/auth/getInfo", { token });
   const endpoints = [
-    "/api/auth/getInfo",
     "/api/dashboard",
     "/api/transactions?limit=1",
+    "/api/transactions/nearby?lat=40.7500&lng=-73.9800&maxDistance=10000",
     "/api/income/get",
     "/api/expense/get",
+    "/api/income/download-excel",
+    "/api/expense/download-excel",
     "/api/categories",
     "/api/budgets",
     "/api/goals",
@@ -65,6 +68,51 @@ async function main() {
     throw new Error("MONGO_URI is required to report smoke-test collection counts");
   }
   await mongoose.connect(process.env.MONGO_URI);
+
+  await request("/api/auth/update-profile", {
+    method: "PUT",
+    token,
+    body: { username: profile.username, email: profile.email },
+  });
+
+  const importedSource = `Smoke import ${Date.now()}`;
+  let importedTransactionId;
+  try {
+    await request("/api/transactions/bulk", {
+      method: "POST",
+      token,
+      body: {
+        transactions: [{
+          source: importedSource,
+          amount: 0.01,
+          type: "expense",
+          date: new Date().toISOString(),
+        }],
+      },
+    });
+    const imported = await request(
+      `/api/transactions?search=${encodeURIComponent(importedSource)}&limit=10`,
+      { token },
+    );
+    importedTransactionId = imported.data?.find((item) => item.source === importedSource)?._id;
+    if (!importedTransactionId) throw new Error("Bulk-imported transaction was not returned by search");
+  } finally {
+    try {
+      if (importedTransactionId) {
+        await request(`/api/transactions/${importedTransactionId}`, {
+          method: "DELETE",
+          token,
+        });
+      }
+    } finally {
+      await mongoose.connection.db.collection("transactions").deleteOne({
+        ...(importedTransactionId ? { _id: new mongoose.Types.ObjectId(importedTransactionId) } : {}),
+        userId: new mongoose.Types.ObjectId(login.user._id),
+        source: importedSource,
+      });
+    }
+  }
+
   const collectionNames = [
     "users",
     "categories",
@@ -81,6 +129,7 @@ async function main() {
     counts[name] = await mongoose.connection.db.collection(name).countDocuments();
   }
   console.log("[Smoke] Collection counts:", JSON.stringify(counts));
+  await request("/api/auth/logout", { method: "POST", token });
   console.log(`[Smoke] Passed ${results.length} HTTP checks.`);
 }
 

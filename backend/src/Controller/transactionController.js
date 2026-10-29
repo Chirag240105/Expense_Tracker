@@ -197,6 +197,17 @@ export const bulkImportTransactions = asyncHandler(async (req, res) => {
   });
 });
 
+export const deleteTransaction = asyncHandler(async (req, res) => {
+  const transaction = await Transaction.findOneAndUpdate(
+    { _id: req.params.id, userId: req.user._id, isDeleted: false },
+    { isDeleted: true, deletedAt: new Date() },
+    { new: true }
+  );
+  if (!transaction) throw new HttpError(404, "Transaction not found or unauthorized");
+
+  return res.status(200).json({ success: true, message: "Transaction deleted successfully" });
+});
+
 /**
  * Geospatial spending query ($nearSphere / $geoNear)
  */
@@ -250,4 +261,3 @@ export const getGeospatialSpending = asyncHandler(async (req, res) => {
     data: transactions,
   });
 });
-

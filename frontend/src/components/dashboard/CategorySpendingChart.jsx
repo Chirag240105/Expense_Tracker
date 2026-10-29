@@ -1,6 +1,7 @@
 import React, { useMemo } from "react";
 import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { useCurrency } from "../../context/CurrencyContext";
+import { CHART_PALETTE } from "../charts/chartColors.js";
 
 const CategorySpendingChart = ({ categories = [] }) => {
   const { formatCurrency } = useCurrency();
@@ -10,10 +11,10 @@ const CategorySpendingChart = ({ categories = [] }) => {
       categories
         .filter((c) => c.totalAmount > 0)
         .slice(0, 8)
-        .map((c) => ({
+        .map((c, index) => ({
           name: c.categoryName,
           value: parseFloat(c.totalAmount.toFixed(2)),
-          color: c.categoryColor || "#6B7280",
+          color: c.categoryColor || CHART_PALETTE[index % CHART_PALETTE.length],
           percentage: c.percentage,
         })),
     [categories]

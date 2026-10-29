@@ -1,6 +1,6 @@
 import React, { useState, useContext } from "react";
-import { useNavigate } from "react-router-dom";
-import { UserContext } from "../../context/Context.js";
+import { useNavigate, useLocation } from "react-router-dom";
+import { UserContext } from "../../context/UserContext.js";
 import Input from "../../components/Inputs/input";
 import { validateEmail } from "../../utils/helper.js";
 import axiosInstance from "../../utils/axiosInstances.js";
@@ -11,9 +11,12 @@ const Auth = () => {
   const [isSignUp, setIsSignUp] = useState(false);
   const { updateUser, setAccessToken } = useContext(UserContext);
   const navigate = useNavigate();
+  const location = useLocation();
 
-  const [loginEmail, setLoginEmail] = useState("");
-  const [loginPassword, setLoginPassword] = useState("");
+  // Pre-fill from landing page "Try demo" button
+  const prefill = location.state;
+  const [loginEmail, setLoginEmail]       = useState(prefill?.prefillEmail    || "");
+  const [loginPassword, setLoginPassword] = useState(prefill?.prefillPassword || "");
   const [loginError, setLoginError] = useState("");
   const [loginLoading, setLoginLoading] = useState(false);
 

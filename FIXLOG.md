@@ -19,3 +19,10 @@
 - Initial browser-console resource `404` was caused by the first Vite test invocation receiving an invalid positional argument. Starting Vite from `frontend/` without extra arguments returned `200`; this was a diagnostic-command error, not an application route defect.
 
 The repeatable HTTP smoke script is `scripts/smoke.js`; run it after seeding to check health, auth, dashboard, transaction, category, budget, goal, analytics, notification, and recurring-rule endpoints.
+
+## Step 3 — Frontend/API alignment evidence
+
+- `npm run smoke` passed 22 checks, including profile update, transaction bulk import, search visibility, deletion, and collection counts. Each temporary test transaction was physically removed after the API soft-delete path was checked; seeded counts remained at 658 transactions.
+- `npm run test:e2e` passed the demo login, dashboard chart render, expense creation, transaction-list visibility, dashboard total change, budget-progress change, logout, and test-data cleanup.
+- `python -m py_compile ai_services/main.py` passed. The AI service reads the `transactions` collection and converts Decimal128 amounts with MongoDB `$toDouble`.
+- Resolved the API path/method mismatches for profile updates, file uploads, recurring-rule PATCH operations, CSV import, and nearby transaction search; updated the README route table to match the mounted Express routes.

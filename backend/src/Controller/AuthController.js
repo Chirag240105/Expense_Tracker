@@ -96,11 +96,21 @@ export const getUser = asyncHandler(async (req, res) => {
 });
 
 export const updateProfile = asyncHandler(async (req, res) => {
-  const { username, preferences, profileImageUrl } = req.body;
+  const { username, email, preferences, profileImageUrl } = req.body;
   const user = await User.findById(req.user._id);
   if (!user || user.isDeleted) throw new HttpError(404, "User not found");
 
-  if (username) user.username = username.trim();
+  if (username !== undefined) {
+    if (!username.trim()) throw new HttpError(400, "Username cannot be empty");
+    user.username = username.trim();
+  }
+  if (email !== undefined) {
+    const normalizedEmail = email.trim().toLowerCase();
+    if (!normalizedEmail) throw new HttpError(400, "Email cannot be empty");
+    const existingUser = await User.findOne({ email: normalizedEmail, _id: { $ne: user._id } });
+    if (existingUser) throw new HttpError(409, "Email already in use");
+    user.email = normalizedEmail;
+  }
   if (profileImageUrl !== undefined) user.profileImageUrl = profileImageUrl;
   if (preferences) {
     user.preferences = { ...(user.preferences?.toObject?.() ?? {}), ...preferences };

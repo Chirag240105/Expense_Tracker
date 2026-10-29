@@ -3,6 +3,10 @@ import jwt from "jsonwebtoken";
 import { addSSEClient } from "../services/changeStreamService.js";
 
 const router = express.Router();
+const JWT_SECRET = process.env.JWT_SECRET;
+if (!JWT_SECRET) {
+  throw new Error("JWT_SECRET is required before the event routes are loaded");
+}
 
 router.get("/stream", (req, res) => {
   // SSE can receive token via query parameter or header
@@ -13,8 +17,8 @@ router.get("/stream", (req, res) => {
 
   let decoded;
   try {
-    decoded = jwt.verify(token, process.env.JWT_SECRET || "fallback_super_secret_jwt_key_2026");
-  } catch (err) {
+    decoded = jwt.verify(token, JWT_SECRET);
+  } catch {
     return res.status(401).json({ message: "Invalid token" });
   }
 
@@ -41,4 +45,3 @@ router.get("/stream", (req, res) => {
 });
 
 export default router;
-

@@ -1,25 +1,19 @@
-import React from "react";
+import React, { lazy, Suspense, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
-import {
-  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
-} from "recharts";
+import { motion, useReducedMotion, useScroll, useTransform } from "framer-motion";
+import AnimatedCounter from "./AnimatedCounter.jsx";
 
-// Static demo data so the hero chart works without an API call
-const DEMO_DATA = [
-  { month: "May", income: 6250, expense: 4100 },
-  { month: "Jun", income: 7700, expense: 4300 },
-  { month: "Jul", income: 6250, expense: 3900 },
-  { month: "Aug", income: 7700, expense: 5200 },
-  { month: "Sep", income: 6730, expense: 4500 },
-  { month: "Oct", income: 6250, expense: 4800 },
-];
+const HeroChart = lazy(() => import("./HeroChart.jsx"));
 
 const DEMO_EMAIL = "demo@expensetracker.dev";
 const DEMO_PASS  = "Demo@12345";
 
 const HeroSection = () => {
   const navigate = useNavigate();
+  const heroRef = useRef(null);
+  const prefersReducedMotion = useReducedMotion();
+  const { scrollYProgress } = useScroll({ target: heroRef, offset: ["start start", "end start"] });
+  const parallaxY = useTransform(scrollYProgress, [0, 1], [0, prefersReducedMotion ? 0 : 55]);
 
   const tryDemo = () => {
     // Pre-fill credentials and navigate — Auth page reads from URL state
@@ -27,10 +21,10 @@ const HeroSection = () => {
   };
 
   return (
-    <section className="relative min-h-screen flex items-center pt-16 bg-gradient-to-br from-gray-950 via-gray-900 to-emerald-950 overflow-hidden">
+    <section ref={heroRef} className="relative min-h-screen flex items-center pt-16 bg-gradient-to-br from-gray-950 via-gray-900 to-emerald-950 overflow-hidden">
       {/* Background glow */}
       <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-green-500/10 rounded-full blur-3xl" />
+        <motion.div style={{ y: parallaxY }} className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-green-500/10 rounded-full blur-3xl" />
       </div>
 
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
@@ -61,9 +55,9 @@ const HeroSection = () => {
           {/* Stats strip */}
           <div className="mt-6 flex flex-wrap gap-4">
             {[
-              ["750+", "transactions seeded"],
-              ["12", "MongoDB concepts"],
-              ["Real-time", "budget alerts"],
+              [<AnimatedCounter key="transactions" end={650} suffix="+" />, "demo transactions"],
+              [<AnimatedCounter key="concepts" end={12} />, "MongoDB concepts"],
+              ["Live", "budget alerts"],
             ].map(([val, label]) => (
               <div key={label} className="flex items-baseline gap-1.5">
                 <span className="text-2xl font-bold text-green-400">{val}</span>
@@ -88,10 +82,6 @@ const HeroSection = () => {
             </button>
           </div>
 
-          <p className="mt-4 text-xs text-gray-500">
-            Demo account: <code className="text-green-400">demo@expensetracker.dev</code> /{" "}
-            <code className="text-green-400">Demo@12345</code>
-          </p>
         </motion.div>
 
         {/* Right — mini dashboard chart */}
@@ -99,6 +89,7 @@ const HeroSection = () => {
           initial={{ opacity: 0, x: 40 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.8, delay: 0.2 }}
+          style={{ y: parallaxY }}
           className="bg-gray-800/60 backdrop-blur-sm border border-gray-700/50 rounded-2xl p-5 shadow-2xl"
         >
           {/* Mock header */}
@@ -128,31 +119,9 @@ const HeroSection = () => {
             ))}
           </div>
 
-          <ResponsiveContainer width="100%" height={200}>
-            <AreaChart data={DEMO_DATA}>
-              <defs>
-                <linearGradient id="heroIncome" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#10B981" stopOpacity={0.4} />
-                  <stop offset="95%" stopColor="#10B981" stopOpacity={0} />
-                </linearGradient>
-                <linearGradient id="heroExpense" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#EF4444" stopOpacity={0.4} />
-                  <stop offset="95%" stopColor="#EF4444" stopOpacity={0} />
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-              <XAxis dataKey="month" tick={{ fill: "#9CA3AF", fontSize: 11 }} axisLine={false} tickLine={false} />
-              <YAxis hide />
-              <Tooltip
-                contentStyle={{ background: "#1F2937", border: "none", borderRadius: 8 }}
-                labelStyle={{ color: "#fff" }}
-                formatter={(v) => [`$${v.toLocaleString()}`, ""]}
-              />
-              <Legend wrapperStyle={{ fontSize: 11, color: "#9CA3AF" }} />
-              <Area type="monotone" dataKey="income" name="Income" stroke="#10B981" fill="url(#heroIncome)" strokeWidth={2} />
-              <Area type="monotone" dataKey="expense" name="Expense" stroke="#EF4444" fill="url(#heroExpense)" strokeWidth={2} />
-            </AreaChart>
-          </ResponsiveContainer>
+          <Suspense fallback={<div className="h-[200px] animate-pulse rounded-lg bg-gray-700/40" aria-label="Loading chart" />}>
+            <HeroChart />
+          </Suspense>
         </motion.div>
       </div>
     </section>

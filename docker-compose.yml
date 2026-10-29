@@ -8,7 +8,12 @@ services:
     volumes:
       - mongodb_data:/data/db
     healthcheck:
-      test: ["CMD-SHELL", "mongosh --port 27017 --eval 'try { rs.status().ok } catch(e) { rs.initiate({ _id: \"rs0\", members: [{ _id: 0, host: \"mongodb:27017\" }] }).ok }' || exit 1"]
+      test:
+        - CMD-SHELL
+        - >-
+          mongosh --port 27017 --quiet --eval
+          'try { rs.status().ok } catch(e) { rs.initiate({ _id: "rs0", members: [{ _id: 0, host: "mongodb:27017" }] }).ok }'
+          || exit 1
       interval: 5s
       timeout: 5s
       retries: 10
@@ -16,17 +21,20 @@ services:
 
   backend:
     build:
-      context: ./backend
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: backend/Dockerfile
     container_name: expense_tracker_backend
-    restart: always
+    restart: unless-stopped
     ports:
       - "9000:9000"
     environment:
-      - PORT=9000
-      - MONGO_URI=mongodb://mongodb:27017/expense_tracker?replicaSet=rs0
-      - JWT_SECRET=super_secret_production_key_change_in_prod_2026
-      - CLIENT_URL=http://localhost:5173
+      PORT: 9000
+      NODE_ENV: development
+      MONGO_URI: ${MONGO_URI:-mongodb://mongodb:27017/expense_tracker?replicaSet=rs0}
+      JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET in .env}
+      CLIENT_URL: ${CLIENT_URL:-http://localhost:5173}
+      SEED_ON_START: ${SEED_ON_START:-false}
+      AI_SERVICE_URL: ${AI_SERVICE_URL:-}
     depends_on:
       mongodb:
         condition: service_healthy
@@ -35,15 +43,14 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+      args:
+        VITE_API_URL: ${VITE_API_URL:-http://localhost:9000}
     container_name: expense_tracker_frontend
-    restart: always
+    restart: unless-stopped
     ports:
-      - "5173:5173"
-    environment:
-      - VITE_API_BASE_URL=http://localhost:9000/api
+      - "5173:80"
     depends_on:
       - backend
 
 volumes:
   mongodb_data:
-

@@ -2,8 +2,9 @@ import React from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from "recharts";
 import CustomToolTip from './CustomToolTip';
 import CustomLegend from './CustomLegend';
+import { CHART_PALETTE } from "./chartColors.js";
 
-const CustomPieChart = ({ data, label, totalAmount, colors = ["#875CF5", "#FA2C37", "#FF6900"], showTextAnchor }) => {
+const CustomPieChart = ({ data, label, totalAmount, colors = CHART_PALETTE, showTextAnchor }) => {
   return (
     <ResponsiveContainer width="100%" height={380}>
       <PieChart>
@@ -19,10 +20,10 @@ const CustomPieChart = ({ data, label, totalAmount, colors = ["#875CF5", "#FA2C3
           label={({ cx, cy }) =>
             showTextAnchor ? (
               <>
-                <text x={cx} y={cy - 25} textAnchor="middle" fill="#666" fontSize={14}>
+                <text x={cx} y={cy - 25} textAnchor="middle" fill="var(--text-secondary)" fontSize={14}>
                   {label}
                 </text>
-                <text x={cx} y={cy + 8} textAnchor="middle" fill="#333" fontSize={24} fontWeight={600}>
+                <text x={cx} y={cy + 8} textAnchor="middle" fill="var(--text-primary)" fontSize={24} fontWeight={600}>
                   {totalAmount}
                 </text>
               </>

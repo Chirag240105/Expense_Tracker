@@ -1,10 +1,9 @@
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useCallback, useEffect, useState, useMemo } from "react";
 import DashboardLayout from "../../components/layouts/DashboardLayout";
 import useUserAuth from "../../hooks/useUserAuth";
 import { useNavigate } from "react-router-dom";
 import axiosInstance from "../../utils/axiosInstances";
 import { API_PATH } from "../../utils/apiPath";
-import InfoCard from "../../components/Cards/InfoCard";
 import { IoMdCard } from "react-icons/io";
 import {
   LuTrendingUp,
@@ -18,6 +17,13 @@ import RecentTransaction from "../../components/dashboard/RecentTransaction";
 import FinanceOverview from "../../components/dashboard/FinanceOverview";
 import CategorySpendingChart from "../../components/dashboard/CategorySpendingChart";
 import DailyTrendsChart from "../../components/dashboard/DailyTrendsChart";
+import {
+  Button,
+  EmptyState,
+  ProgressBar,
+  Skeleton,
+  StatCard,
+} from "../../components/ui/index.jsx";
 
 const Home = () => {
   useUserAuth();
@@ -27,11 +33,10 @@ const Home = () => {
   const [dashData, setDashData] = useState(null);
   const [budgets, setBudgets] = useState([]);
   const [goals, setGoals] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
 
-  const fetchAll = async () => {
-    if (loading) return;
+  const fetchAll = useCallback(async () => {
     setLoading(true);
     setLoadError("");
     try {
@@ -49,12 +54,11 @@ const Home = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetchAll();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [fetchAll]);
 
   // Derive the values the old components expected from the new response shape
   const totalBalance = dashData?.lifetime?.balance ?? 0;
@@ -84,14 +88,14 @@ const Home = () => {
           <section className="my-12 rounded-2xl border border-rose-200 bg-white p-8 text-center shadow-sm" role="alert">
             <h1 className="text-xl font-semibold text-gray-900">Dashboard unavailable</h1>
             <p className="mt-2 text-sm text-gray-600">{loadError}</p>
-            <button
+            <Button
               type="button"
               onClick={fetchAll}
               disabled={loading}
-              className="mt-5 rounded-lg bg-emerald-600 px-5 py-2.5 font-medium text-white hover:bg-emerald-700 disabled:opacity-60"
+              className="mt-5"
             >
               {loading ? "Retrying..." : "Try again"}
-            </button>
+            </Button>
           </section>
         )}
         {loading && !dashData && !loadError && (
@@ -99,7 +103,7 @@ const Home = () => {
             <div className="h-36 animate-pulse rounded-2xl bg-gray-200" />
             <div className="grid gap-6 md:grid-cols-3">
               {[0, 1, 2].map((item) => (
-                <div key={item} className="h-28 animate-pulse rounded-2xl bg-gray-200" />
+                <Skeleton key={item} className="h-28 rounded-2xl" />
               ))}
             </div>
             <div className="h-72 animate-pulse rounded-2xl bg-gray-200" />
@@ -153,26 +157,23 @@ const Home = () => {
 
         {/* Top Stats */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-          <InfoCard
+          <StatCard
             icon={<IoMdCard />}
             label="Total Balance"
             value={formatCurrency(totalBalance)}
-            color="bg-blue-500"
-            onSeeMore={() => navigate("/transactions")}
+            onClick={() => navigate("/transactions")}
           />
-          <InfoCard
+          <StatCard
             icon={<IoMdCard />}
             label="Total Income"
             value={formatCurrency(totalIncome)}
-            color="bg-green-500"
-            onSeeMore={() => navigate("/income")}
+            onClick={() => navigate("/income")}
           />
-          <InfoCard
+          <StatCard
             icon={<IoMdCard />}
             label="Total Expense"
             value={formatCurrency(totalExpense)}
-            color="bg-red-500"
-            onSeeMore={() => navigate("/expense")}
+            onClick={() => navigate("/expense")}
           />
         </div>
 
@@ -254,15 +255,7 @@ const Home = () => {
                           {formatCurrency(goal.targetAmount)}
                         </span>
                       </div>
-                      <div className="w-full bg-gray-200 rounded-full h-2">
-                        <div
-                          className="h-2 rounded-full transition-all"
-                          style={{
-                            width: `${pct}%`,
-                            backgroundColor: goal.color || "#10B981",
-                          }}
-                        />
-                      </div>
+                      <ProgressBar value={pct} label={`${goal.title} progress`} />
                       <p className="text-xs text-gray-400 mt-0.5">
                         {pct.toFixed(1)}% complete
                       </p>
@@ -323,16 +316,12 @@ const Home = () => {
           )}
         </div>
         {!loading && recentTransactions.length === 0 && (
-          <div className="my-6 rounded-2xl border border-dashed border-gray-300 bg-white p-8 text-center">
-            <h2 className="font-semibold text-gray-900">Your dashboard is ready</h2>
-            <p className="mt-2 text-sm text-gray-600">Add your first transaction to see your finances here.</p>
-            <button
-              type="button"
-              onClick={() => navigate("/transactions")}
-              className="mt-4 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700"
-            >
-              View transactions
-            </button>
+          <div className="my-6">
+            <EmptyState
+              title="Your dashboard is ready"
+              description="Add your first transaction to see your finances here."
+              action={<Button onClick={() => navigate("/transactions")}>View transactions</Button>}
+            />
           </div>
         )}
         </>

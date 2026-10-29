@@ -1,13 +1,14 @@
 import React from 'react'
 import { XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Area, AreaChart } from 'recharts';
 import { useCurrency } from '../../context/CurrencyContext';
+import { CHART_COLORS } from "./chartColors.js";
 const CustomLineChart = ({ data }) => {
     const {formatCurrency} = useCurrency();
     const CustomToolTip = ({active, payload}) => {
         if (active && payload && payload.length){
             return(
-                <div className='bg-white shadow-md rounded-lg p-2 border border-gray-300'>
-                    <p className='text-xs font-semibold text-purple-800 mb-1'>{payload[0].payload.category}</p>
+                <div className='rounded-lg border border-gray-300 bg-white p-2 shadow-md'>
+                    <p className='mb-1 text-xs font-semibold text-rose-800'>{payload[0].payload.category}</p>
                     <p className='text-sm text-gray-600'>Amount: <span className='text-sm font-medium text-gray-900 '>{formatCurrency(payload[0].payload.amount)}</span></p>
                 </div>
             )
@@ -17,17 +18,17 @@ const CustomLineChart = ({ data }) => {
         <ResponsiveContainer width="100%" height={300}>
             <AreaChart data={data}>
             <defs>
-                <linearGradient id="colorAmount" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.8} />
-              <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0} />
+                <linearGradient id="expenseGradient" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="5%" stopColor={CHART_COLORS.expense} stopOpacity={0.4} />
+              <stop offset="95%" stopColor={CHART_COLORS.expense} stopOpacity={0} />
             </linearGradient>
             </defs>
             <CartesianGrid stroke='none'/>
-                <XAxis dataKey="month" tick={{fontSize: 12, fill: "#555"}} stroke='none' />
-                <YAxis tick={{fontSize: 12, fill: "#555"}} stroke='none'/>
+                <XAxis dataKey="month" tick={{fontSize: 12, fill: "var(--text-secondary)"}} stroke='none' />
+                <YAxis tick={{fontSize: 12, fill: "var(--text-secondary)"}} stroke='none'/>
                 <Tooltip content={<CustomToolTip/>}/>
 
-                <Area type="monotone" dataKey="amount" stroke='#875cf5' fill='url(#incomeGradient)' strokeWidth={3} dot={{r: 3, fill: "#ab8df8" }}/>
+                <Area type="monotone" dataKey="amount" stroke={CHART_COLORS.expense} fill="url(#expenseGradient)" strokeWidth={3} dot={{r: 3, fill: CHART_COLORS.expense }}/>
            
 
             </AreaChart>
