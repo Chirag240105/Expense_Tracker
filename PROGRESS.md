@@ -21,9 +21,14 @@
 
 ## Commits
 
-- `7cafd38` — stabilize authentication and dashboard runtime failures.
-- `fde8608` — seed empty MongoDB collections and materialize monthly summaries.
+- `d8e5b1e` — stabilize authentication and dashboard runtime failures.
+- `e0d3a00` — seed empty MongoDB collections and materialize monthly summaries.
 - Step 3 and later commits will be recorded here after each requested step is completed.
+
+## Push-protection follow-up
+
+- Removed `ai_services/.env` from the `developing` branch history after the exposed credentials were rotated.
+- Verified the file is ignored and absent from the branch history; pushed the cleaned branch to `origin/developing`.
 
 ## Remaining work
 
