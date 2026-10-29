@@ -50,11 +50,11 @@ The project also doubles as a showcase of **practical MongoDB usage**: discrimin
 
 | Landing | Dashboard |
 |---|---|
-| ![Landing](./docs/screenshots/landing.png) | ![Dashboard](./docs/screenshots/dashboard.png) |
+| ![Landing](./docs/screenshots/00-landing.png) | ![Dashboard](./docs/screenshots/02-dashboard.png) |
 
 | Transactions | Budgets & Goals |
 |---|---|
-| ![Transactions](./docs/screenshots/transactions.png) | ![Budgets](./docs/screenshots/budgets.png) |
+| ![Transactions](./docs/screenshots/05-transactions.png) | ![Budgets](./docs/screenshots/03-budgets.png) |
 
 You can regenerate screenshots of the configured pages with `npm run screenshots`.
 
