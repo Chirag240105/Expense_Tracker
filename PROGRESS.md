@@ -9,7 +9,7 @@
 | Step | Scope | Status | Verification |
 |---|---|---|---|
 | 1 | Diagnose and fix auth/dashboard runtime failures; add health, recovery states, and smoke test | **DONE** | Mongo replica set connected; all 14 smoke HTTP checks returned 2xx; dashboard browser render succeeded without post-fix console errors |
-| 2 | Reset demo data, validators, indexes, summaries, and startup seed option | **IN PROGRESS** | Seed reset succeeded; changes are being verified and committed |
+| 2 | Reset demo data, validators, indexes, summaries, and startup seed option | **DONE** | `npm run seed:reset`: 1 user, 12 categories, 658 transactions, 6 budgets, 3 goals, 3 recurring rules, 4 notifications, 3 audit logs, 12 monthly summaries |
 | 3 | Align frontend, backend, AI service, docs, and end-to-end flows | **IN PROGRESS** | API surface and browser flow are being checked |
 | 4 | Improve design system, responsive app shell, and landing/dashboard UX | **PENDING** | — |
 | 5 | Cleanup, deployment assets/docs, CI, screenshots, final security/build checks | **PENDING** | — |

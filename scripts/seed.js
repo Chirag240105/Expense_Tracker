@@ -23,6 +23,8 @@ import {
   AuditLog,
 } from "../backend/src/models/index.js";
 import { syncAllIndexes } from "../backend/src/Database/syncIndexes.js";
+import { ensureCollectionsAndValidators } from "../backend/src/Database/ensureCollections.js";
+import { buildMaterializeSummaryPipeline } from "../backend/src/aggregations/summaryAggregations.js";
 
 dotenv.config();
 
@@ -62,13 +64,14 @@ const NYC_LOCATIONS = [
   { name: "AMC Empire Cinema", coords: [-73.9882, 40.7570] },
 ];
 
-export async function seed() {
+export async function seed({ disconnectOnCompletion = true } = {}) {
   const now = new Date();
   console.log("\n============================================================");
   console.log("   🌱 EXPENSE TRACKER - DATABASE SEEDER");
   console.log("============================================================\n");
 
   await connectDB();
+  await ensureCollectionsAndValidators();
   await syncAllIndexes();
 
   // 1. Setup Demo User
@@ -82,6 +85,7 @@ export async function seed() {
     await RecurringRule.deleteMany({ userId: demoUser._id });
     await Notification.deleteMany({ userId: demoUser._id });
     await AuditLog.deleteMany({ userId: demoUser._id });
+    await User.db.db.collection("monthly_summaries").deleteMany({ userId: demoUser._id });
     await Category.deleteMany({ userId: demoUser._id });
     await User.deleteOne({ _id: demoUser._id });
     demoUser = null;
@@ -592,6 +596,26 @@ export async function seed() {
     console.log(`\n✅ [Bulk Mode] Successfully populated ${bulkCount} high-throughput benchmark transactions.`);
   }
 
+  await Transaction.aggregate(buildMaterializeSummaryPipeline(demoUser._id));
+  console.log("[Monthly Summaries] Materialized demo user summaries.");
+
+  const collectionNames = [
+    "users",
+    "categories",
+    "transactions",
+    "budgets",
+    "goals",
+    "recurringrules",
+    "notifications",
+    "auditlogs",
+    "monthly_summaries",
+  ];
+  console.log("[Counts] Collection totals:");
+  for (const name of collectionNames) {
+    const count = await User.db.db.collection(name).countDocuments();
+    console.log(`  ${name}: ${count}`);
+  }
+
   console.log("\n============================================================");
   console.log("   ✨ SEEDING COMPLETE! DEMO CREDENTIALS:");
   console.log("------------------------------------------------------------");
@@ -599,7 +623,7 @@ export async function seed() {
   console.log(`   Password: ${DEMO_CREDENTIALS.password}`);
   console.log("============================================================\n");
 
-  await disconnectDB();
+  if (disconnectOnCompletion) await disconnectDB();
 }
 
 if (process.argv[1] && process.argv[1].endsWith("seed.js")) {

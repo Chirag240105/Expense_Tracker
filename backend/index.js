@@ -118,6 +118,15 @@ export async function startServer() {
   await connectDB();
   await initChangeStreams();
 
+  if (process.env.SEED_ON_START === "true") {
+    const { User } = await import("./src/models/User.models.js");
+    if ((await User.countDocuments()) === 0) {
+      const { seed } = await import("../scripts/seed.js");
+      console.info("[Seed] No users found; creating demo data because SEED_ON_START=true.");
+      await seed({ disconnectOnCompletion: false });
+    }
+  }
+
   return app.listen(port, () => {
     console.log(`[Server] Expense Tracker API running on port ${port}`);
   });
