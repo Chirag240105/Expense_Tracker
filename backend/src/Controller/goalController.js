@@ -73,3 +73,4 @@ export const deleteGoal = asyncHandler(async (req, res) => {
     message: "Goal deleted successfully",
   });
 });
+

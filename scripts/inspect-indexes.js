@@ -41,3 +41,4 @@ run().catch((err) => {
   console.error("Index inspection failed:", err);
   process.exit(1);
 });
+

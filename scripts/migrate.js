@@ -130,3 +130,4 @@ if (process.argv[1].endsWith("migrate.js")) {
     process.exit(1);
   });
 }
+

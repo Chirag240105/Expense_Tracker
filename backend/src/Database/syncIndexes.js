@@ -44,3 +44,4 @@ export async function syncAllIndexes() {
 }
 
 export default syncAllIndexes;
+

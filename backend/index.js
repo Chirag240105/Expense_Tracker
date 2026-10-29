@@ -1,6 +1,7 @@
 import express from "express";
 import dotenv from "dotenv";
 import cors from "cors";
+import cookieParser from "cookie-parser";
 import path, { dirname } from "path";
 import { fileURLToPath } from "url";
 import mongoose from "mongoose";
@@ -21,6 +22,9 @@ import goalRoutes from "./src/Routes/goalRoutes.js";
 import analyticsRoutes from "./src/Routes/analyticsRoutes.js";
 import fileRoutes from "./src/Routes/fileRoutes.js";
 import eventRoutes from "./src/Routes/eventRoutes.js";
+import notificationRoutes from "./src/Routes/notificationRoutes.js";
+import recurringRuleRoutes from "./src/Routes/recurringRuleRoutes.js";
+import aiRoutes from "./src/Routes/aiRoutes.js";
 
 dotenv.config();
 
@@ -31,12 +35,14 @@ const __dirname = dirname(__filename);
 // Security & Parsing Middleware
 app.use(
   cors({
-    origin: process.env.CLIENT_URL || "*",
+    origin: process.env.CLIENT_URL || "http://localhost:5173",
+    credentials: true,                          // required for httpOnly refresh cookie
     methods: ["GET", "POST", "DELETE", "PUT", "PATCH", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
 
+app.use(cookieParser());                         // must be before routes so req.cookies is populated
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 
@@ -86,6 +92,22 @@ app.use("/api/goals", goalRoutes);
 app.use("/api/analytics", analyticsRoutes);
 app.use("/api/files", fileRoutes);
 app.use("/api/events", eventRoutes);
+app.use("/api/notifications", notificationRoutes);
+app.use("/api/recurring-rules", recurringRuleRoutes);
+
+// AI proxy — only mounted when AI_SERVICE_URL is configured or ENABLE_AI_ROUTES=true
+if (process.env.AI_SERVICE_URL || process.env.ENABLE_AI_ROUTES === "true") {
+  app.use("/api/ai", aiRoutes);
+  console.log(`[Server] AI routes mounted → ${process.env.AI_SERVICE_URL || "http://localhost:8000"}`);
+} else {
+  // Provide a soft 503 so the frontend doesn't hard-error when AI service is off
+  app.use("/api/ai", (_req, res) =>
+    res.status(503).json({
+      success: false,
+      message: "AI service is not enabled. Set AI_SERVICE_URL in backend/.env",
+    })
+  );
+}
 
 // Centralized Error Handling
 app.use(notFoundHandler);

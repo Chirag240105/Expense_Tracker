@@ -250,3 +250,4 @@ export const getGeospatialSpending = asyncHandler(async (req, res) => {
     data: transactions,
   });
 });
+

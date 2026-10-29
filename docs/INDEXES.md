@@ -134,3 +134,4 @@ The following benchmarks were generated using `npm run explain` against 1,500 sa
 1. **ESR Rule (Equality, Sort, Range)**: Compound indexes are ordered with equality filters first (`userId`, `type`), followed by sort/range keys (`date`).
 2. **Partial Indexes for Storage Savings**: `recurringrules` only indexes active rules (`{ isActive: true }`), reducing RAM footprint.
 3. **Background Sync**: Indexes are synchronized on application boot or via `npm run inspect:indexes`.
+

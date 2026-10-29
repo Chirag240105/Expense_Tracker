@@ -43,3 +43,4 @@ export const materializeMonthlySummary = asyncHandler(async (req, res) => {
     message: "Monthly summary materialized successfully via $merge",
   });
 });
+

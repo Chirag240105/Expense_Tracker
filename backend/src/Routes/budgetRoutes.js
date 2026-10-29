@@ -13,3 +13,4 @@ router.post("/", protect, createBudget);
 router.delete("/:id", protect, deleteBudget);
 
 export default router;
+

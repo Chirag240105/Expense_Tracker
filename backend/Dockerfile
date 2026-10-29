@@ -10,3 +10,4 @@ COPY . .
 EXPOSE 9000
 
 CMD ["node", "index.js"]
+

@@ -15,3 +15,4 @@ router.post("/bulk", protect, bulkImportTransactions);
 router.get("/nearby", protect, getGeospatialSpending);
 
 export default router;
+

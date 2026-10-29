@@ -73,3 +73,4 @@ describe("Phase 4 Database Reporting & Aggregations", () => {
     assert.equal(mergeStage.$merge.whenMatched, "replace");
   });
 });
+

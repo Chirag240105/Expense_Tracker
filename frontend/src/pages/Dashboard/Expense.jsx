@@ -38,21 +38,7 @@ const Expense = () => {
     }
   };
 
-  const fetchIncomeDetails = async() => {
-    if(loading) return ;
-
-    setLoading(true);
-    try{
-      const response = await axiosInstances.get(`${API_PATH.EXPENSE.GET_ALL_EXPENSE}`);
-      if(response.data) {
-        setExpenseData(response.data);
-      }
-    }catch(error){
-      console.log("Something went wrong. Please try agian.", error);
-    }finally{
-      setLoading(false);
-    }
-  };
+  
   const handleAddExpense = async(expense) => {
 
     const {source, amount, date, icon} = expense;

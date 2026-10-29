@@ -1,47 +1,62 @@
-import React, { useState, useEffect, useContext } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect, useContext } from "react";
+import { useNavigate } from "react-router-dom";
 import { HiUserCircle, HiMenu, HiLogout } from "react-icons/hi";
-import { FaBell } from "react-icons/fa";
-import { UserContext } from '../../context/Context.js';
-import axiosInstances from '../../utils/axiosInstances';
-import { API_PATH } from '../../utils/apiPath';
-import CurrencySelector from '../CurrencySelector';  // ADD THIS
+import { LuBell } from "react-icons/lu";
+import { UserContext } from "../../context/Context.js";
+import axiosInstance from "../../utils/axiosInstances";
+import { API_PATH } from "../../utils/apiPath";
+import CurrencySelector from "../CurrencySelector";
 
 function Navbar({ activeMenu, toggleSideMenu }) {
   const navigate = useNavigate();
   const { user } = useContext(UserContext);
   const [userAvatar, setUserAvatar] = useState(null);
   const [showDropdown, setShowDropdown] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
     fetchUserInfo();
+    fetchUnreadCount();
+    // Poll unread notifications every 60 s
+    const timer = setInterval(fetchUnreadCount, 60000);
+    return () => clearInterval(timer);
   }, []);
 
   const fetchUserInfo = async () => {
     try {
-      const response = await axiosInstances.get(API_PATH.AUTH.GET_USER_INFO);
-      if (response.data) {
-        setUserAvatar(response.data.avatar || response.data.profileImageUrl);
-      }
-    } catch (error) {
-      console.error('Error fetching user info:', error);
+      const res = await axiosInstance.get(API_PATH.AUTH.GET_USER_INFO);
+      if (res.data) setUserAvatar(res.data.profileImageUrl || null);
+    } catch {
+      // silent
+    }
+  };
+
+  const fetchUnreadCount = async () => {
+    try {
+      const res = await axiosInstance.get(API_PATH.NOTIFICATIONS.LIST, {
+        params: { unreadOnly: "true" },
+      });
+      setUnreadCount(res.data?.unreadCount ?? 0);
+    } catch {
+      // silent
     }
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('token');
-    navigate('/login');
+    localStorage.removeItem("token");
+    navigate("/auth");
   };
 
   return (
     <nav className="bg-white border-b border-gray-200 shadow-sm sticky top-0 z-40">
       <div className="px-4 py-3">
         <div className="flex items-center justify-between">
-          {/* Left Section */}
+          {/* Left */}
           <div className="flex items-center gap-4">
             <button
               onClick={toggleSideMenu}
               className="md:hidden p-2 rounded-lg hover:bg-gray-100 transition"
+              aria-label="Toggle menu"
             >
               <HiMenu className="text-2xl text-gray-700" />
             </button>
@@ -56,35 +71,37 @@ function Navbar({ activeMenu, toggleSideMenu }) {
             </div>
           </div>
 
-          {/* Right Section */}
-          <div className="flex items-center gap-3">
-            {/* Active Menu Badge */}
+          {/* Right */}
+          <div className="flex items-center gap-2 md:gap-3">
             <div className="hidden md:block px-4 py-1.5 bg-green-100 text-green-700 rounded-full text-sm font-medium">
               {activeMenu}
             </div>
 
-            {/* Currency Selector - ADD THIS */}
             <CurrencySelector variant="navbar" />
 
-            {/* Notifications */}
-            <button className="p-2 rounded-lg hover:bg-gray-100 transition relative">
-              <FaBell className="text-xl text-gray-600" />
-              <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+            {/* Notifications bell */}
+            <button
+              onClick={() => navigate("/notifications")}
+              className="p-2 rounded-lg hover:bg-gray-100 transition relative"
+              aria-label="Notifications"
+            >
+              <LuBell className="text-xl text-gray-600" />
+              {unreadCount > 0 && (
+                <span className="absolute top-1 right-1 min-w-[16px] h-4 px-0.5 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+                  {unreadCount > 9 ? "9+" : unreadCount}
+                </span>
+              )}
             </button>
 
-            {/* User Profile Dropdown */}
+            {/* User dropdown */}
             <div className="relative">
               <button
-                onClick={() => setShowDropdown(!showDropdown)}
+                onClick={() => setShowDropdown((v) => !v)}
                 className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-100 transition"
               >
-                <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-green-500 shadow-sm">
+                <div className="w-9 h-9 rounded-full overflow-hidden border-2 border-green-500 shadow-sm">
                   {userAvatar ? (
-                    <img 
-                      src={userAvatar} 
-                      alt="Profile" 
-                      className="w-full h-full object-cover"
-                    />
+                    <img src={userAvatar} alt="Profile" className="w-full h-full object-cover" />
                   ) : (
                     <div className="w-full h-full bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center">
                       <HiUserCircle className="text-white text-2xl" />
@@ -93,7 +110,7 @@ function Navbar({ activeMenu, toggleSideMenu }) {
                 </div>
                 <div className="hidden md:block text-left">
                   <p className="text-sm font-semibold text-gray-800">
-                    {user?.username || user?.name || 'User'}
+                    {user?.username || "User"}
                   </p>
                   <p className="text-xs text-gray-500">View Profile</p>
                 </div>
@@ -101,36 +118,40 @@ function Navbar({ activeMenu, toggleSideMenu }) {
 
               {showDropdown && (
                 <>
-                  <div 
-                    className="fixed inset-0 z-10" 
+                  <div
+                    className="fixed inset-0 z-10"
                     onClick={() => setShowDropdown(false)}
                   />
-                  <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-20">
+                  <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-lg border border-gray-200 py-2 z-20">
                     <div className="px-4 py-3 border-b border-gray-100">
                       <p className="text-sm font-semibold text-gray-800">
-                        {user?.username || user?.name || 'User'}
+                        {user?.username || "User"}
                       </p>
                       <p className="text-xs text-gray-500">{user?.email}</p>
                     </div>
-                    
                     <button
-                      onClick={() => {
-                        navigate('/profile');
-                        setShowDropdown(false);
-                      }}
+                      onClick={() => { navigate("/profile"); setShowDropdown(false); }}
                       className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-3"
                     >
-                      <HiUserCircle className="text-lg" />
-                      My Profile
+                      <HiUserCircle className="text-lg" /> My Profile
                     </button>
-                    
+                    <button
+                      onClick={() => { navigate("/notifications"); setShowDropdown(false); }}
+                      className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-3"
+                    >
+                      <LuBell className="text-lg" /> Notifications
+                      {unreadCount > 0 && (
+                        <span className="ml-auto text-xs bg-red-100 text-red-600 px-1.5 py-0.5 rounded-full font-medium">
+                          {unreadCount}
+                        </span>
+                      )}
+                    </button>
                     <div className="border-t border-gray-100 mt-2 pt-2">
                       <button
                         onClick={handleLogout}
                         className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-3"
                       >
-                        <HiLogout className="text-lg" />
-                        Logout
+                        <HiLogout className="text-lg" /> Logout
                       </button>
                     </div>
                   </div>

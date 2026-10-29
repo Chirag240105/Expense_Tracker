@@ -13,7 +13,7 @@ import CurrencySelector from '../../components/CurrencySelector';
 import { useCurrency } from '../../context/CurrencyContext';
 
 const Profile = () => {
-  const { user, updateUser } = useUserAuth();
+  useUserAuth();
   const { selectedCurrency, getCurrencySymbol } = useCurrency();
   const fileInputRef = useRef(null);
 

@@ -123,3 +123,4 @@ runExplainBenchmark().catch((err) => {
   console.error("Explain benchmark failed:", err);
   process.exit(1);
 });
+

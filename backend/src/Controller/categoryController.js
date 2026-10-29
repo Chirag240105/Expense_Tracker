@@ -52,3 +52,4 @@ export const deleteCategory = asyncHandler(async (req, res) => {
     message: "Category deleted successfully",
   });
 });
+

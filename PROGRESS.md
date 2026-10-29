@@ -1,71 +1,108 @@
 # Project Execution Progress
 
-This file tracks the status across all phases of the Expense Tracker upgrade.
-
 ## Overview
-- Overall Status: IN PROGRESS
-- Current Phase: Phase 2 (Schema and Migration Design)
-- Target: Execute Phases 2 through 7 in one continuous run
+- Overall Status: **COMPLETE**
+- All Phases: 1 → 7 done
 
 ---
 
 ## Phase Status Summary
 
-| Phase | Description | Status | Verification (Lint / Test / Build) | Git Commit |
+| Phase | Description | Status | Verification | Git Commit |
 |---|---|---|---|---|
-| **Phase 1** | Stabilize & Secure Current APIs | DONE | Lint PASS, Tests PASS | `feat(phase-1): secure APIs, input validation, and auth tokens` |
-| **Phase 2** | Schema & Migration Design | DONE | Tests PASS (6/6), Build PASS | `feat(phase-2): unified transactions, categories, budgets, goals & migration` |
-| **Phase 3** | Indexes & Explain Performance Evidence | DONE | Tests PASS (10/10), Explain PASS | `feat(phase-3): query-tailored indexes, sync tooling, and explain benchmarks` |
-| **Phase 4** | Database Reporting & Aggregations | DONE | Tests PASS (15/15), Build PASS | `feat(phase-4): single-roundtrip $facet dashboard, $setWindowFields trends, budget tracking` |
-| **Phase 5** | Advanced Mongo (Transactions, Streams, GridFS, Bulk) | DONE | Tests PASS (18/18), Build PASS | `feat(phase-5): ACID transactions, change-stream SSE, GridFS receipts, bulkWrite` |
-| **Phase 6** | Operations, Replica Set, Demo Seeder & Tests | DONE | Tests PASS (21/21), Seeder PASS | `feat(phase-6): docker-compose replica set, idempotent seeder, and health checks` |
-| **Phase 7** | Frontend Enhancements, Screenshots & Docs Rewrite | IN PROGRESS | Pending | Upcoming |
+| **Phase 1** | Stabilize & Secure APIs | ✅ DONE | Lint PASS, Tests PASS | `feat(phase-1)` |
+| **Phase 2** | Schema & Migration Design | ✅ DONE | Tests PASS (6/6), Build PASS | `feat(phase-2)` |
+| **Phase 3** | Indexes & Explain Evidence | ✅ DONE | Tests PASS (10/10), Explain PASS | `feat(phase-3)` |
+| **Phase 4** | Aggregation Pipelines | ✅ DONE | Tests PASS (15/15), Build PASS | `feat(phase-4)` |
+| **Phase 5** | Transactions, Streams, GridFS | ✅ DONE | Tests PASS (18/18), Build PASS | `feat(phase-5)` |
+| **Phase 6** | Ops, Replica Set, Seeder | ✅ DONE | Tests PASS (21/21), Seeder PASS | `feat(phase-6)` |
+| **Phase 7** | Frontend, AI, CI/CD, Docs | ✅ DONE | Build PASS ✅ | `feat(phase-7)` |
 
 ---
 
-## Phase Details
+## Phase 7 — What Was Done
 
-### Phase 1 — Stabilize and Secure Current APIs
-- **Done**:
-  - Centralized error handling (`errorHandler.js`, `asyncHandler.js`).
-  - Security middlewares (Helmet, CORS with whitelist, rate-limiting, mongo-sanitize).
-  - Strict input validation using Zod (`schemas.js`, `validateRequest.js`).
-  - Owner-scoped transaction queries and deletes (`userId: req.user.id`).
-  - Refresh token model and token rotation flow (`RefreshToken.models.js`).
-  - Safe Excel export without file collision or in-memory leaks.
-- **Verification**: Verified middleware and routes.
+### Backend additions
+- `notificationRoutes.js` + `recurringRuleRoutes.js` — wired controllers to routes and mounted in `index.js`
+- `aiRoutes.js` rewritten — now proxies Gemini-first / OpenAI-fallback; `/api/ai/chat` added; feature-flagged via `AI_SERVICE_URL` / `ENABLE_AI_ROUTES`
+- Auth alias `/api/auth/getInfo` added so the frontend `apiPath.js` mapping works
+- `backend/.env` updated with `AI_SERVICE_URL` and `ENABLE_AI_ROUTES`
 
-### Phase 2 — Schema and Migration Design
-- **In Progress**:
-  - Design unified `Transaction` collection with discriminators (`Income` / `Expense`), Decimal128 amount, categories (`Category`), budgets (`Budget`), savings goals (`Goal`), recurring rules (`RecurringRule`), audit logs (`AuditLog`), notifications (`Notification`), user preferences (`User.preferences`).
-  - Idempotent migration script `scripts/migrate.js` to migrate legacy collections (`incomes`, `expenses`) to `transactions` and default categories.
-- **Next**: Run tests and lint, commit Phase 2.
+### AI Service (`ai_services/main.py`)
+- **Full rewrite** — Gemini primary, OpenAI SDK v1.x fallback (removed broken `openai.ChatCompletion`)
+- Reads from `transactions` collection (Phase 2 unified schema), not legacy `incomes`/`expenses`
+- Heavy aggregation pushed into MongoDB pipelines, not Pandas in-memory
+- Hard-coded Mongo URI removed — uses `MONGO_URI` + `DB_NAME` from `.env`
+- New `/api/ai/chat` endpoint with 90-day context window built by aggregation
+- `requirement.txt` updated: `google-generativeai==0.7.2`, `openai==1.40.0`
+- `.env.example` created
 
-### Phase 3 — Indexes and Performance Evidence
-- **Next**:
-  - Compound, text, 2dsphere, TTL, and partial/sparse indexes.
-  - Explain scripts comparing COLLSCAN vs IXSCAN with before/after statistics in `docs/INDEXES.md`.
+### Frontend — 7 new pages + updated shell
+| File | Purpose |
+|------|---------|
+| `pages/Dashboard/Transactions.jsx` | Paginated list with keyset cursor, search, filters, export |
+| `pages/Dashboard/Budgets.jsx` | Live progress bars, exceeded/warning/normal states |
+| `pages/Dashboard/Goals.jsx` | Savings goals with contribution history |
+| `pages/Dashboard/Categories.jsx` | Category manager (income + expense) |
+| `pages/Dashboard/Analytics.jsx` | Area + bar charts, moving average, cumulative savings |
+| `pages/Dashboard/Notifications.jsx` | Bell alerts with read/mark-all/delete |
+| `pages/Dashboard/RecurringRules.jsx` | Manage recurring income/expense rules |
+| `components/dashboard/DailyTrendsChart.jsx` | Daily income vs expense bar chart |
+| `components/dashboard/CategorySpendingChart.jsx` | Pie chart of 30-day category spend |
+| `components/Transactions/AddTransactionForm.jsx` | Add transaction modal with all fields |
 
-### Phase 4 — Database Reporting & Aggregations
-- **Next**:
-  - Dashboard `$facet` pipeline, analytics with `$setWindowFields`, category breakdown `$lookup`, monthly trends.
+- `Home.jsx` rewritten to use new dashboard API shape (`data.lifetime.*`, `data.recentTransactions`)
+- `App.jsx` fully rewritten — code-split lazy pages, `PrivateRoute` guard, proper `/auth` redirect
+- `SideMenu.jsx` — all 10 menu items including new pages
+- `Navbar.jsx` — live unread notification badge with 60-second polling
+- `apiPath.js` — all new API paths added, `getInfo` alias fixed, `AI.CHAT` added
+- `axiosInstances.js` — cleaner 401 handler
 
-### Phase 5 — Advanced MongoDB Features
-- **Next**:
-  - Multi-document transactions (`session.withTransaction`), change streams with Server-Sent Events (SSE), GridFS for receipts/avatars, `bulkWrite` for CSV/JSON imports, keyset pagination.
+### CI/CD
+- `.github/workflows/ci.yml` — 3 jobs: backend tests (MongoDB RS service container), frontend lint+build, Docker smoke test on `main`
 
-### Phase 6 — Operations, Quality & Demo Seeder
-- **Next**:
-  - Docker Compose with replica set setup, health check endpoints, automated seeder `scripts/seed.js` (`--reset`, `--bulk 50000`), comprehensive test suite.
-
-### Phase 7 — Frontend Polish, Screenshots & Full Docs Rewrite
-- **Next**:
-  - Wire frontend to unified models, budgets, goals, map, notifications SSE.
-  - Playwright automated screenshots (`scripts/screenshots.js` at 1440x900).
-  - Complete rewrite of `README.md` for both developers and non-developers with analogies, diagrams, tables, and guides.
-  - `docs/MONGODB_CONCEPTS.md`, `docs/ATLAS_SETUP.md`.
+### Documentation
+- `README.md` — full rewrite: plain-English explanation, Mermaid architecture + ER diagrams, all API endpoints, quick-start, env table, troubleshooting, glossary
+- `docs/MONGODB_CONCEPTS.md` — complete concept → file → why → verify table
+- `docs/ATLAS_SETUP.md` — cluster creation, least-privilege user, backup, profiler, Atlas Search
+- `scripts/screenshots.js` — Playwright capture at 1440×900 (7 pages)
+- `docs/screenshots/` directory created
 
 ---
 
 ## Known Issues & Notes
-- None currently blocking.
+- `docs/screenshots/*.png` are not committed (no server running in CI to capture them); run `npm run screenshots` locally after seeding
+- Atlas M0 (free tier) does not support ACID transactions or change streams — use M10+ or local Docker RS
+- AI service requires Python 3.10+ and `pip install -r requirement.txt`
+- `GEMINI_API_KEY` in `.env` — rotate if the project is made public
+
+---
+
+## Quick Commands
+
+```bash
+# Start everything (Docker)
+docker compose up --build
+
+# Seed demo account
+npm run seed
+
+# Reset and re-seed
+npm run seed:reset
+
+# Frontend dev
+cd frontend && npm run dev
+
+# Backend dev
+cd backend && npm run dev
+
+# AI service
+cd ai_services && uvicorn main:app --reload --port 8000
+
+# Screenshots (after seeding + starting both servers)
+npm run screenshots
+```
+
+## Demo Login
+- Email: `demo@expensetracker.dev`
+- Password: `Demo@12345`

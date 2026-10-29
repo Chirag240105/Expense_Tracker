@@ -13,3 +13,4 @@ router.post("/", protect, createCategory);
 router.delete("/:id", protect, deleteCategory);
 
 export default router;
+

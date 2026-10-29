@@ -103,3 +103,4 @@ goalSchema.index({ userId: 1, status: 1 });
 
 export const Goal = mongoose.model("Goal", goalSchema);
 export default Goal;
+

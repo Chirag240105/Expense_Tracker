@@ -15,3 +15,4 @@ router.post("/:id/contributions", protect, addContribution);
 router.delete("/:id", protect, deleteGoal);
 
 export default router;
+

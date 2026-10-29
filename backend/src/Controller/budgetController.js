@@ -50,3 +50,4 @@ export const deleteBudget = asyncHandler(async (req, res) => {
     message: "Budget deleted successfully",
   });
 });
+

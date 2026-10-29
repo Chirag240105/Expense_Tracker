@@ -50,3 +50,4 @@ categorySchema.index({ userId: 1, name: 1, type: 1 }, { unique: true, partialFil
 
 export const Category = mongoose.model("Category", categorySchema);
 export default Category;
+

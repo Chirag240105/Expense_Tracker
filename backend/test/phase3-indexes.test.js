@@ -33,3 +33,4 @@ describe("Phase 3 Indexes & Configuration", () => {
     assert.ok(ttlFound, "RefreshToken should have TTL index with expireAfterSeconds: 0");
   });
 });
+

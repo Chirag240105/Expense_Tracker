@@ -1,5 +1,16 @@
 import dotenv from "dotenv";
+import path from "path";
+import { fileURLToPath } from "url";
 import mongoose from "mongoose";
+
+// Resolve __dirname for ES modules
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+// Load backend/.env (contains MONGO_URI) — must happen BEFORE any db import
+dotenv.config({ path: path.resolve(__dirname, "../backend/.env") });
+// Also load root .env if present, without overriding already-set values
+dotenv.config({ path: path.resolve(__dirname, "../.env"), override: false });
+
 import connectDB, { disconnectDB } from "../backend/src/Database/db.js";
 import {
   User,

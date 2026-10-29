@@ -70,3 +70,4 @@ budgetSchema.index({ userId: 1, categoryId: 1, period: 1, isActive: 1 });
 
 export const Budget = mongoose.model("Budget", budgetSchema);
 export default Budget;
+

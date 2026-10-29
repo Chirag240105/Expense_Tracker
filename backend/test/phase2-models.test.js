@@ -94,3 +94,4 @@ describe("Phase 2 Models & Schema Validation", () => {
     assert.ok(hasCompound, "Notification should have compound index on userId and isRead");
   });
 });
+

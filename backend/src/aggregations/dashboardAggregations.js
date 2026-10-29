@@ -179,3 +179,4 @@ export function formatDashboardResult(facetResult) {
     recentTransactions: result.recentTransactions || [],
   };
 }
+

@@ -6,3 +6,10 @@ pandas==2.1.3
 numpy==1.26.2
 python-dotenv==1.0.0
 joblib==1.3.2
+
+# AI providers — both are optional; the service runs without them
+# Gemini (primary)
+google-generativeai==0.7.2
+
+# OpenAI (fallback) — must be >= 1.0.0 (new SDK, ChatCompletion is removed)
+openai==1.40.0

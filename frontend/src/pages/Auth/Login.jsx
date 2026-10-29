@@ -16,7 +16,7 @@ const Login = () => {
 
     const [email, setEmail] = useState("");
     const [password, setpassword] = useState("");
-    const [error, setError] = useState(null);
+    const [_error, setError] = useState(null);
     const [forgot, setForgot] = useState(false);
     const {updateUser} = useContext(UserContext);
     const navigate = useNavigate();

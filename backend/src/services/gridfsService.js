@@ -65,3 +65,4 @@ export async function streamFromGridFS(fileId, res) {
 
   return downloadStream.pipe(res);
 }
+
